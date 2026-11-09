@@ -232,7 +232,7 @@
     .error-msg { color: #EE4D2D; font-size: 13px; margin-bottom: 10px; display: none; text-align: center; }
     .success-msg { color: #4CAF50; font-size: 13px; margin-bottom: 10px; display: none; text-align: center; }
 
-    /* Painel Admin */
+    /* Painel Admin Melhorado */
     .admin-panel {
       display: none;
       background: white;
@@ -240,7 +240,7 @@
       top: 0;
       right: 0;
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       height: 100%;
       z-index: 400;
       overflow-y: auto;
@@ -248,17 +248,41 @@
     }
 
     .admin-panel.show { display: block; }
-    .admin-header { background: #4CAF50; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .admin-header { background: linear-gradient(135deg, #4CAF50, #45a049); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; }
     .admin-header h3 { font-size: 16px; }
     .close-admin { font-size: 24px; cursor: pointer; }
     .admin-content { padding: 20px; }
-    .admin-content h4 { margin-bottom: 15px; color: #333; }
-    .admin-content input { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
-    .save-btn { background: #4CAF50; color: white; border: none; font-weight: 600; cursor: pointer; padding: 10px; border-radius: 4px; width: 100%; margin-bottom: 10px; }
-    .product-list { margin-top: 20px; }
-    .product-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-    .delete-btn { background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 3px; font-size: 12px; cursor: pointer; }
+    .admin-content h4 { margin-bottom: 5px; color: #333; font-size: 15px; }
+    .admin-content .hint { font-size: 11px; color: #888; margin-bottom: 10px; margin-top: -6px; padding-left: 2px; }
+    .admin-content input { width: 100%; padding: 10px 12px; margin-bottom: 4px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; transition: border 0.2s; }
+    .admin-content input:focus { outline: none; border-color: #4CAF50; }
+    
+    .image-preview-area {
+      border: 2px dashed #ddd;
+      border-radius: 6px;
+      padding: 15px;
+      text-align: center;
+      margin-bottom: 12px;
+      background: #fafafa;
+      transition: border-color 0.2s;
+    }
+    .image-preview-area.has-image { border-color: #4CAF50; background: #f8fff8; }
+    .image-preview-area img { max-width: 120px; max-height: 120px; border-radius: 4px; margin-bottom: 8px; }
+    .image-preview-area p { font-size: 12px; color: #888; }
+    
+    .save-btn { background: linear-gradient(135deg, #4CAF50, #45a049); color: white; border: none; font-weight: 600; cursor: pointer; padding: 12px; border-radius: 6px; width: 100%; margin-bottom: 15px; font-size: 15px; transition: transform 0.1s; }
+    .save-btn:active { transform: scale(0.98); }
+    
+    .divider { height: 1px; background: #eee; margin: 20px 0; }
+    
+    .product-list h4 { display: flex; justify-content: space-between; align-items: center; }
+    .product-list h4 span { font-size: 12px; color: #888; font-weight: normal; }
+    .product-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
+    .product-item:hover { background: #f9f9f9; }
+    .delete-btn { background: #f44336; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: background 0.2s; }
+    .delete-btn:hover { background: #d32f2f; }
     .empty-state { text-align: center; padding: 40px 20px; color: #999; font-size: 14px; grid-column: 1 / -1; }
+    .tip-box { background: #E3F2FD; border-left: 3px solid #2196F3; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 12px; color: #1565C0; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -283,7 +307,7 @@
 
   <!-- Modal da Imagem -->
   <div class="image-modal" id="imageModal">
-    <span class="modal-close" onclick="closeModal()">&times;</span>
+    <span class="modal-close" onclick="closeImageModal()">&times;</span>
     <div class="modal-product-name" id="modalProductName"></div>
     <div class="modal-timer" id="modalTimer">⏰ 00:00</div>
     <img id="modalImage" src="" alt="Produto">
@@ -306,24 +330,53 @@
     </div>
   </div>
 
-  <!-- Painel Admin -->
+  <!-- Painel Admin Melhorado -->
   <div class="admin-panel" id="adminPanel">
     <div class="admin-header">
-      <h3>⚙️ Painel Administrativo</h3>
+      <h3>⚙️ Cadastrar Produto</h3>
       <span class="close-admin" onclick="closeAdminPanel()">&times;</span>
     </div>
     <div class="admin-content">
-      <h4>Adicionar Novo Produto</h4>
-      <input type="text" id="prodName" placeholder="Nome do produto">
-      <input type="text" id="prodPrice" placeholder="Preço (ex: 89.90)">
-      <input type="text" id="prodOriginalPrice" placeholder="Preço original (ex: 149.90)">
-      <input type="text" id="prodImage" placeholder="Link da imagem">
-      <input type="text" id="prodLink" placeholder="Link da Shopee (seu afiliado)">
-      <input type="text" id="prodTime" placeholder="Tempo em minutos (ex: 15)">
-      <button class="save-btn" onclick="saveProduct()">✅ Salvar Produto</button>
+    
+      <div class="tip-box">
+        💡 <strong>Dica rápida:</strong> Abra o produto na Shopee → copie os dados um por um e cole aqui!<br>
+        Para a imagem: clique com botão direito na imagem da Shopee → "Copiar endereço da imagem" → cole abaixo ✅
+      </div>
+    
+      <h4>📝 Nome do Produto</h4>
+      <input type="text" id="prodName" placeholder="Ex: Fone de Ouvido Bluetooth Sem Fio">
+      <div class="hint">Copie o nome da Shopee e cole aqui</div>
+      
+      <h4>💰 Preço de Venda</h4>
+      <input type="text" id="prodPrice" placeholder="Ex: 89.90">
+      <div class="hint">Digite apenas números e ponto, sem R$</div>
+      
+      <h4>🏷️ Preço Original (de R$...)</h4>
+      <input type="text" id="prodOriginalPrice" placeholder="Ex: 149.90 (deixe vazio se não tiver)">
+      <div class="hint">Para mostrar o risco e calcular o desconto automaticamente</div>
+      
+      <h4>🖼️ Link da Imagem</h4>
+      <input type="text" id="prodImage" placeholder="Cole o endereço da imagem aqui" oninput="previewImage(this.value)">
+      <div class="hint">Botão direito na foto → Copiar endereço da imagem</div>
+      
+      <div class="image-preview-area" id="imagePreviewArea">
+        <p>📷 A imagem aparecerá aqui quando você colar o link</p>
+      </div>
+      
+      <h4>🔗 Link de Afiliado da Shopee</h4>
+      <input type="text" id="prodLink" placeholder="Cole seu link de afiliado aqui">
+      <div class="hint">O link que você pegou na Shopee com seu código de afiliado</div>
+      
+      <h4>⏰ Tempo da Oferta</h4>
+      <input type="text" id="prodTime" placeholder="Ex: 15">
+      <div class="hint">Quantos minutos vai durar a promoção</div>
+      
+      <button class="save-btn" onclick="saveProduct()">✅ SALVAR PRODUTO</button>
+      
+      <div class="divider"></div>
       
       <div class="product-list">
-        <h4>📋 Meus Produtos</h4>
+        <h4>📋 Meus Produtos <span id="productCount">0</span></h4>
         <div id="adminProductList"></div>
       </div>
     </div>
@@ -331,13 +384,25 @@
 
   <script>
     // ================= CONFIGURAÇÃO =================
-    const ADMIN_DOMAIN = '@admin.com'; // 🔑 E-mail terminando assim = Admin
+    const ADMIN_DOMAIN = '@admin.com';
     
     let isRegisterMode = false;
     let activeTimers = {};
     let products = JSON.parse(localStorage.getItem('myProducts')) || [];
     let users = JSON.parse(localStorage.getItem('siteUsers')) || [];
     let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+
+    // ================= PREVISUALIZAR IMAGEM =================
+    function previewImage(url) {
+      const area = document.getElementById('imagePreviewArea');
+      if (url && url.length > 10) {
+        area.innerHTML = `<img src="${url}" alt="Prévia" onerror="this.parentElement.innerHTML='<p style=\\'color:red\\'>❌ Link inválido ou imagem não carregou</p>'">`;
+        area.classList.add('has-image');
+      } else {
+        area.innerHTML = '<p>📷 A imagem aparecerá aqui quando você colar o link</p>';
+        area.classList.remove('has-image');
+      }
+    }
 
     // ================= VERIFICAR USUÁRIO LOGADO =================
     function updateHeaderAuthArea() {
@@ -349,9 +414,6 @@
             <button class="logout-btn" onclick="logout()">Sair</button>
           </div>
         `;
-        if (currentUser.isAdmin) {
-          // Admin fica logado até clicar em Sair
-        }
       } else {
         area.innerHTML = `<button class="login-header-btn" id="openLoginBtn" onclick="openAuthModal()">Entrar</button>`;
       }
@@ -361,6 +423,7 @@
       localStorage.removeItem('currentUser');
       currentUser = null;
       closeAdminPanel();
+      update
       updateHeaderAuthArea();
     }
 
@@ -421,9 +484,8 @@
       if (email.endsWith(ADMIN_DOMAIN)) {
         let admin = users.find(u => u.email === email);
         if (!admin) {
-          // Primeiro acesso - cria conta de admin
           if (password.length < 4) {
-            showError('Use uma senha com pelo menos 4 caracteres');
+            showError('Use pelo menos 4 caracteres na senha');
             return;
           }
           admin = { email, password, isAdmin: true };
@@ -439,12 +501,11 @@
           }, 800);
           return;
         }
-        // Verifica senha do admin
         if (admin.password === password) {
           currentUser = admin;
           saveCurrentUser();
           closeAuthModal();
-          openAdmin
+          openAdminPanel();
           updateHeaderAuthArea();
           return;
         } else {
@@ -455,7 +516,6 @@
 
       // Usuário comum
       if (isRegisterMode) {
-        // Criar nova conta
         if (users.find(u => u.email === email)) {
           showError('Este e-mail já está cadastrado!');
           return;
@@ -474,7 +534,6 @@
           updateHeaderAuthArea();
         }, 800);
       } else {
-        // Fazer login
         const user = users.find(u => u.email === email && u.password === password);
         if (!user) {
           showError('E-mail ou senha incorretos!');
@@ -495,7 +554,7 @@
       localStorage.setItem('currentUser', JSON.stringify(currentUser));
     }
 
-    // ================= PAINEL ADMINISTRATIVO =================
+    // ================= PAINEL ADMIN =================
     function openAdminPanel() {
       document.getElementById('adminPanel').classList.add('show');
       renderAdminProductList();
@@ -513,6 +572,8 @@
       document.getElementById('prodImage').value = '';
       document.getElementById('prodLink').value = '';
       document.getElementById('prodTime').value = '';
+      document.getElementById('imagePreviewArea').innerHTML = '<p>📷 A imagem aparecerá aqui quando você colar o link</p>';
+      document.getElementById('imagePreviewArea').classList.remove('has-image');
     }
 
     function saveProduct() {
@@ -564,22 +625,25 @@
 
     function renderAdminProductList() {
       const list = document.getElementById('adminProductList');
+      document.getElementById('productCount').textContent = `(${products.length})`;
+      
       if (products.length === 0) {
-        list.innerHTML = '<p style="color:#999; font-size:13px;">Nenhum produto cadastrado</p>';
+        list.innerHTML = '<p style="color:#999; font-size:13px; text-align:center; padding:20px;">Nenhum produto cadastrado ainda</p>';
         return;
       }
+      
       list.innerHTML = products.map(p => `
         <div class="product-item">
           <div style="flex:1; font-size:13px;">
-            <div style="color:#333;">${p.name.length > 28 ? p.name.substring(0, 28) + '...' : p.name}</div>
-            <div style="color:#EE4D2D; font-weight:600;">R$ ${p.price.toFixed(2)}</div>
+            <div style="color:#333; font-weight:500;">${p.name.length > 28 ? p.name.substring(0, 28) + '...' : p.name}</div>
+            <div style="color:#EE4D2D; font-weight:600;">R$ ${p.price.toFixed(2)} ${p.discount > 0 ? `<span style="font-size:11px; color:#999;">- ${p.discount}%</span>` : ''}</div>
           </div>
           <button class="delete-btn" onclick="deleteProduct(${p.id})">Excluir</button>
         </div>
       `).join('');
     }
 
-    // ================= MODAL DE IMAGEM E COMPRA =================
+    // ================= MODAL DE IMAGEM =================
     let currentModalProduct = null;
     let modalTimerInterval = null;
 
@@ -627,7 +691,7 @@
       modalTimerInterval = setInterval(updateModalTime, 1000);
     }
 
-    // ================= CRONÔMETROS DOS PRODUTOS NA LISTA =================
+    // ================= CRONÔMETROS =================
     function startProductTimers() {
       products.forEach(product => {
         let endTime = parseInt(localStorage.getItem(`timer_${product.id}`));
