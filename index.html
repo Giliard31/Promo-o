@@ -63,7 +63,7 @@
         .preview-container { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.8rem 0; }
         .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; background: #ddd; }
         
-        /* GRID DE PRODUTOS: EXATAMENTE 2 COLUNAS EM CELULARES E MOBILE */
+        /* GRID DE PRODUTOS: EXATAMENTE 2 COLUNAS EM CELULARES */
         .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
         
         @media (min-width: 768px) {
@@ -73,11 +73,7 @@
 
         .product-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between; }
         
-        /* CRONÔMETRO REGRESSIVO EM DESTAQUE */
-        .countdown-box { background: #fff3cd; color: #856404; font-size: 0.75rem; font-weight: bold; text-align: center; padding: 5px 2px; border-bottom: 1px solid #ffeeba; min-height: 26px; }
-        .countdown-box.expired { background: #f8d7da; color: #721c24; }
-
-        /* CARROSSEL E MÍDIA LIMPA */
+        /* CARROSSEL E MÍDIA */
         .photo-carousel { position: relative; width: 100%; height: 180px; overflow: hidden; background: #fff; }
         .carousel-images { display: flex; transition: transform 0.3s ease; height: 100%; }
         .carousel-img, .carousel-video { min-width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
@@ -90,21 +86,30 @@
         
         .product-info { padding: 0.6rem; display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1; }
         .product-name { font-size: 0.85rem; color: var(--dark); margin-bottom: 0.4rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.2; height: 2.4em; }
-        .price-container { margin-bottom: 0.4rem; }
+        .price-container { margin-bottom: 0.3rem; }
         .product-price { font-size: 1.05rem; font-weight: bold; color: var(--primary); }
         .product-old-price { font-size: 0.7rem; color: #999; text-decoration: line-through; margin-left: 0.2rem; display: block; }
         .product-discount { background: #ff4444; color: white; font-size: 0.65rem; padding: 1px 4px; border-radius: 3px; display: inline-block; margin-left: 0.2rem; vertical-align: middle; }
         
+        /* CRONÔMETRO EM FUNDO PRETO POUCO ANTES DO BOTÃO */
+        .countdown-box { background: #111; color: #ffaa00; font-size: 0.72rem; font-weight: bold; text-align: center; padding: 4px; border-radius: 4px; margin-bottom: 0.4rem; }
+        .countdown-box.expired { background: #ff4444; color: white; }
+
         .buy-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 0.5rem 0.2rem; border-radius: 6px; font-weight: 600; margin-top: auto; cursor: pointer; font-size: 0.82rem; text-decoration: none; display: block; text-align: center; }
         .buy-btn:hover { background: #e65c00; }
         .admin-buttons { display: flex; gap: 0.3rem; margin-top: 0.4rem; }
         .admin-buttons button { flex: 1; padding: 0.3rem; font-size: 0.75rem; }
         
-        /* MODAL DE ZOOM DA IMAGEM GRANDE */
-        .image-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; }
+        /* MODAL DE ZOOM GRANDE COM CARROSSEL PRÓPRIO */
+        .image-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; align-items: center; justify-content: center; }
         .image-modal.active { display: flex; }
-        .image-modal img { max-width: 95%; max-height: 90%; object-fit: contain; border-radius: 8px; }
-        .close-image-modal { position: absolute; top: 20px; right: 20px; background: white; border: none; font-size: 1.5rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+        .modal-carousel-container { position: relative; width: 90vw; max-width: 500px; height: 75vh; display: flex; align-items: center; justify-content: center; }
+        .modal-carousel-images { display: flex; transition: transform 0.3s ease; width: 100%; height: 100%; align-items: center; overflow: hidden; }
+        .modal-carousel-img { min-width: 100%; height: 100%; object-fit: contain; }
+        .modal-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; }
+        .modal-nav.prev { left: 10px; }
+        .modal-nav.next { right: 10px; }
+        .close-image-modal { position: absolute; top: 15px; right: 20px; background: white; border: none; font-size: 1.5rem; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-weight: bold; z-index: 3; }
 
         .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: white; padding: 0.8rem 1.2rem; border-radius: 8px; z-index: 9999; opacity: 0; transition: all 0.3s; font-size: 0.9rem; text-align: center; }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
@@ -183,7 +188,7 @@
         <div id="listaAdmin"></div>
     </div>
 
-    <!-- LISTA DE PRODUTOS (LAYOUT 2 POR LINHA EM CELULARES) -->
+    <!-- LISTA DE PRODUTOS -->
     <div id="produtosSection">
         <div class="empty-state" id="emptyState" style="display:none;">
             <h3>🛍️ Nenhuma oferta cadastrada ainda</h3>
@@ -204,10 +209,14 @@
     </div>
 </div>
 
-<!-- MODAL PARA VER A FOTO GRANDE (ZOOM) -->
-<div class="image-modal" id="imageModal" onclick="fecharFotoGrande()">
-    <button class="close-image-modal">×</button>
-    <img id="imgGrande" src="" alt="Produto Ampliado">
+<!-- MODAL DE ZOOM COM CARROSSEL PARA PASSAR TODAS AS FOTOS -->
+<div class="image-modal" id="imageModal">
+    <button class="close-image-modal" onclick="fecharFotoGrande()">×</button>
+    <div class="modal-carousel-container">
+        <button class="modal-nav prev" onclick="modalPrevPhoto()">‹</button>
+        <div class="modal-carousel-images" id="modalCarouselImages"></div>
+        <button class="modal-nav next" onclick="modalNextPhoto()">›</button>
+    </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -233,6 +242,10 @@ let affiliateId = localStorage.getItem('affiliateId') || '';
 let carouselIndices = {};
 let autoPlayTimers = {};
 let countdownInterval = null;
+
+// Variáveis para controlar o Zoom em carrossel
+let modalImagensAtuais = [];
+let modalIndiceAtual = 0;
 
 window.onload = function() {
     if (affiliateId) {
@@ -374,7 +387,6 @@ async function adicionarProduto() {
         return;
     }
 
-    // Calcula o momento exato em que a oferta expira
     const expiraEm = Date.now() + (tempoMinutos * 60 * 1000);
 
     const novoProduto = {
@@ -438,7 +450,6 @@ function iniciarRelogiosRegressivos() {
             const timerElement = document.getElementById(`timer-${produto.id}`);
             if (!timerElement) return;
 
-            // Se o produto não tem tempo de expiração salvo, dá um tempo padrão fictício de 20 min
             const expiraEm = produto.expiraEm || (agora + 20 * 60 * 1000);
             const diff = expiraEm - agora;
 
@@ -452,12 +463,12 @@ function iniciarRelogiosRegressivos() {
                 const minFormatado = String(minutos).padStart(2, '0');
                 const segFormatado = String(segundos).padStart(2, '0');
                 
-                timerElement.innerHTML = `⏳ Expira em: ${minFormatado}:${segFormatado}`;
+                timerElement.innerHTML = `⏳ Oferta expira em ${minFormatado}:${segFormatado}`;
             }
         });
     };
 
-    atualizar(); // Executa imediatamente
+    atualizar();
     countdownInterval = setInterval(atualizar, 1000);
 }
 
@@ -504,11 +515,40 @@ function atualizarCarrossel(produtoId) {
     }
 }
 
-function abrirFotoGrande(urlImg) {
-    const modal = document.getElementById('imageModal');
-    const imgGrande = document.getElementById('imgGrande');
-    imgGrande.src = urlImg;
-    modal.classList.add('active');
+// ================= ZOOM COM CARROSSEL PARA PASSAR TODAS AS FOTOS =================
+function abrirZoomProduto(produtoId) {
+    const produto = produtos.find(p => p.id === produtoId);
+    if (!produto || !produto.imagens || produto.imagens.length === 0) return;
+
+    modalImagensAtuais = produto.imagens;
+    modalIndiceAtual = carouselIndices[produtoId] || 0; // Pega exatamente a foto que estava aparecendo
+
+    const modalImagesContainer = document.getElementById('modalCarouselImages');
+    modalImagesContainer.innerHTML = modalImagensAtuais.map(img => 
+        `<img src="${img}" class="modal-carousel-img" alt="Zoom Foto">`
+    ).join('');
+
+    atualizarModalCarrossel();
+    document.getElementById('imageModal').classList.add('active');
+}
+
+function modalNextPhoto() {
+    if (modalImagensAtuais.length <= 1) return;
+    modalIndiceAtual = (modalIndiceAtual + 1) % modalImagensAtuais.length;
+    atualizarModalCarrossel();
+}
+
+function modalPrevPhoto() {
+    if (modalImagensAtuais.length <= 1) return;
+    modalIndiceAtual = (modalIndiceAtual - 1 + modalImagensAtuais.length) % modalImagensAtuais.length;
+    atualizarModalCarrossel();
+}
+
+function atualizarModalCarrossel() {
+    const container = document.getElementById('modalCarouselImages');
+    if (container) {
+        container.style.transform = `translateX(-${modalIndiceAtual * 100}%)`;
+    }
 }
 
 function fecharFotoGrande() {
@@ -546,20 +586,16 @@ function renderizarProdutos() {
 
         return `
             <div class="product-card">
-                <!-- CRONÔMETRO REGRESSIVO ACIMA DA FOTO -->
-                <div class="countdown-box">
-                    <span id="timer-${id}">⏳ Expira em: --:--</span>
-                </div>
-
-                <!-- CARROSSEL DE FOTOS LIMPÍSSIMO -->
+                <!-- CARROSSEL DE FOTOS -->
                 <div class="photo-carousel">
                     <div class="carousel-images" id="carousel-${id}">
-                        ${midias.map((midia) => {
+                        ${midias.map((midia, mIndex) => {
                             const ehVideo = midia.includes('mp4') || midia.includes('webm') || midia.includes('youtube') || midia.includes('youtu.be');
                             if (ehVideo) {
                                 return `<video src="${midia}" class="carousel-video" controls muted></video>`;
                             } else {
-                                return `<img src="${midia}" alt="${produto.nome}" class="carousel-img" loading="lazy" onclick="abrirFotoGrande('${midia}')" onerror="this.src='https://via.placeholder.com/300x300/FF6A00/FFFFFF?text=Produto'">`;
+                                // Ao clicar na foto, abre o zoom em carrossel passando o ID do produto
+                                return `<img src="${midia}" alt="${produto.nome}" class="carousel-img" loading="lazy" onclick="abrirZoomProduto('${id}')" onerror="this.src='https://via.placeholder.com/300x300/FF6A00/FFFFFF?text=Produto'">`;
                             }
                         }).join('')}
                     </div>
@@ -582,6 +618,12 @@ function renderizarProdutos() {
                         ${desconto > 0 ? `<span class="product-discount">-${desconto}%</span>` : ''}
                         ${produto.precoAntigo > 0 ? `<span class="product-old-price">De R$ ${produto.precoAntigo.toFixed(2).replace('.', ',')}</span>` : ''}
                     </div>
+                    
+                    <!-- CRONÔMETRO EM FUNDO PRETO LOGO ACIMA DO BOTÃO DE COMPRA -->
+                    <div class="countdown-box">
+                        <span id="timer-${id}">⏳ Carregando...</span>
+                    </div>
+
                     <a href="${linkComAfiliado}" target="_blank" rel="noopener" class="buy-btn">🛒 Comprar</a>
                     ${isAdmin ? `
                         <div class="admin-buttons">
