@@ -1,770 +1,525 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ofertas Imperdíveis</title>
-  
-  <!-- PWA -->
-  <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk9mZXJ0YXMgSW1wZXJkbsOtdmVpcyIsCiAgInNob3J0X25hbWUiOiAiT2ZlcnRhcyIsCiAgImRlc2NyaXB0aW9uIjogIk9mZXJ0YXMgaW5jcmVkbsOtddmVpcyBkZSBwcm9kdXRvcyBwYXJhIHZvY8OhcyIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZjVmNWY1IiwKICAidGhlbWVfY29sb3IiOiAiRUU0RFREIn0=">
-  <meta name="theme-color" content="#EE4D2D">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    }
-
-    body {
-      background-color: #f5f5f5;
-      min-height: 100vh;
-      padding-bottom: 20px;
-    }
-
-    /* Cabeçalho */
-    header {
-      background: linear-gradient(to right, #EE4D2D, #FF6A00);
-      padding: 12px 16px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .logo {
-      color: white;
-      font-size: 20px;
-      font-weight: 700;
-    }
-
-    .login-header-btn {
-      background: white;
-      color: #EE4D2D;
-      border: none;
-      padding: 6px 16px;
-      border-radius: 4px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .user-info {
-      color: white;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .logout-btn {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 3px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .search-bar {
-      display: flex;
-      background: white;
-      border-radius: 2px;
-      padding: 8px 12px;
-      align-items: center;
-      margin-top: 8px;
-    }
-
-    .search-bar input {
-      border: none;
-      outline: none;
-      flex: 1;
-      font-size: 14px;
-      width: 100%;
-    }
-
-    .section-title {
-      padding: 12px 16px;
-      font-size: 16px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    /* Grade de Produtos */
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      padding: 12px;
-    }
-
-    .product-card {
-      background: white;
-      border-radius: 4px;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-
-    .product-image {
-      width: 100%;
-      aspect-ratio: 1;
-      background: #fafafa;
-      object-fit: cover;
-      cursor: pointer;
-    }
-
-    .product-info {
-      padding: 10px;
-    }
-
-    .product-name {
-      font-size: 13px;
-      color: #333;
-      line-height: 1.4;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      margin-bottom: 6px;
-    }
-
-    .product-price {
-      color: #EE4D2D;
-      font-size: 16px;
-      font-weight: 700;
-    }
-
-    .product-discount {
-      display: inline-block;
-      background: #EE4D2D;
-      color: white;
-      font-size: 10px;
-      padding: 2px 4px;
-      border-radius: 2px;
-      margin-left: 6px;
-    }
-
-    .product-timer {
-      background: #FFF0EB;
-      color: #EE4D2D;
-      font-size: 11px;
-      padding: 4px 6px;
-      border-radius: 3px;
-      margin-top: 6px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .product-timer span.time {
-      font-weight: 700;
-      font-size: 13px;
-    }
-
-    .buy-btn {
-      width: 100%;
-      background: #EE4D2D;
-      color: white;
-      border: none;
-      padding: 8px;
-      border-radius: 3px;
-      margin-top: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    /* Modal Imagem */
-    .image-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.9);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-      padding: 20px;
-    }
-
-    .image-modal.show { display: flex; }
-    .image-modal img { max-width: 100%; max-height: 60vh; border-radius: 4px; margin-bottom: 15px; }
-    .modal-close { position: absolute; top: 15px; right: 20px; color: white; font-size: 30px; cursor: pointer; }
-    .modal-product-name { color: white; font-size: 16px; text-align: center; margin-bottom: 10px; }
-    .modal-timer { background: #EE4D2D; color: white; padding: 10px 20px; border-radius: 4px; font-size: 18px; font-weight: 700; margin-bottom: 15px; }
-    .modal-buy-btn { background: #EE4D2D; color: white; border: none; padding: 12px 40px; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: 600; }
-
-    /* Tela de Login/Cadastro */
-    .auth-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 300;
-      padding: 20px;
-    }
-
-    .auth-modal.show { display: flex; }
-    .auth-box { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 350px; }
-    .auth-box h3 { text-align: center; margin-bottom: 20px; color: #333; }
-    .auth-box input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
-    .auth-btn { width: 100%; background: #EE4D2D; color: white; border: none; padding: 12px; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: 600; margin-top: 5px; }
-    .auth-switch { text-align: center; margin-top: 15px; font-size: 13px; color: #666; cursor: pointer; }
-    .close-auth { text-align: center; margin-top: 10px; color: #999; font-size: 14px; cursor: pointer; }
-    .error-msg { color: #EE4D2D; font-size: 13px; margin-bottom: 10px; display: none; text-align: center; }
-    .success-msg { color: #4CAF50; font-size: 13px; margin-bottom: 10px; display: none; text-align: center; }
-
-    /* Painel Admin Melhorado */
-    .admin-panel {
-      display: none;
-      background: white;
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 100%;
-      max-width: 440px;
-      height: 100%;
-      z-index: 400;
-      overflow-y: auto;
-      box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-    }
-
-    .admin-panel.show { display: block; }
-    .admin-header { background: linear-gradient(135deg, #4CAF50, #45a049); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; }
-    .admin-header h3 { font-size: 16px; }
-    .close-admin { font-size: 24px; cursor: pointer; }
-    .admin-content { padding: 20px; }
-    .admin-content h4 { margin-bottom: 5px; color: #333; font-size: 15px; }
-    .admin-content .hint { font-size: 11px; color: #888; margin-bottom: 10px; margin-top: -6px; padding-left: 2px; }
-    .admin-content input { width: 100%; padding: 10px 12px; margin-bottom: 4px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; transition: border 0.2s; }
-    .admin-content input:focus { outline: none; border-color: #4CAF50; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FF6A00">
+    <title>Minhas Ofertas - Shopee</title>
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTGlzdGEgZGUgT2ZlcnRhcyIsInNob3J0X25hbWUiOiJPZmVydGFzIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvciI6IiNGRjZBMDAifQ==">
     
-    .image-preview-area {
-      border: 2px dashed #ddd;
-      border-radius: 6px;
-      padding: 15px;
-      text-align: center;
-      margin-bottom: 12px;
-      background: #fafafa;
-      transition: border-color 0.2s;
-    }
-    .image-preview-area.has-image { border-color: #4CAF50; background: #f8fff8; }
-    .image-preview-area img { max-width: 120px; max-height: 120px; border-radius: 4px; margin-bottom: 8px; }
-    .image-preview-area p { font-size: 12px; color: #888; }
-    
-    .save-btn { background: linear-gradient(135deg, #4CAF50, #45a049); color: white; border: none; font-weight: 600; cursor: pointer; padding: 12px; border-radius: 6px; width: 100%; margin-bottom: 15px; font-size: 15px; transition: transform 0.1s; }
-    .save-btn:active { transform: scale(0.98); }
-    
-    .divider { height: 1px; background: #eee; margin: 20px 0; }
-    
-    .product-list h4 { display: flex; justify-content: space-between; align-items: center; }
-    .product-list h4 span { font-size: 12px; color: #888; font-weight: normal; }
-    .product-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; }
-    .product-item:hover { background: #f9f9f9; }
-    .delete-btn { background: #f44336; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: background 0.2s; }
-    .delete-btn:hover { background: #d32f2f; }
-    .empty-state { text-align: center; padding: 40px 20px; color: #999; font-size: 14px; grid-column: 1 / -1; }
-    .tip-box { background: #E3F2FD; border-left: 3px solid #2196F3; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 12px; color: #1565C0; line-height: 1.5; }
-  </style>
+    <!-- Firebase SDK (Compat version) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        :root { --primary: #FF6A00; --light: #FFF8F2; --dark: #333; --gray: #F5F5F5; --shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        body { background: #f8f9fa; min-height: 100vh; }
+        
+        /* MODAL DE LOGIN DO ADMIN */
+        .login-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 2000; }
+        .login-modal.active { display: flex; }
+        .login-box { background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); width: 90%; max-width: 350px; position: relative; }
+        .login-box h3 { text-align: center; color: var(--primary); margin-bottom: 1.2rem; }
+        .login-box input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #eee; border-radius: 8px; font-size: 0.95rem; }
+        .login-box input:focus { outline: none; border-color: var(--primary); }
+        .close-modal { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #666; }
+
+        .btn { padding: 0.8rem 1.2rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-primary { background: var(--primary); color: white; width: 100%; }
+        .btn-primary:hover { background: #e65c00; }
+        .btn-secondary { background: white; color: var(--primary); border: 2px solid var(--primary); }
+        .btn-danger { background: #ff4444; color: white; }
+        .btn-success { background: #00C851; color: white; }
+        
+        /* CABEÇALHO */
+        header { background: var(--primary); color: white; padding: 1rem; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
+        .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header-content h1 { font-size: 1.2rem; }
+        .header-buttons { display: flex; gap: 0.5rem; align-items: center; }
+        
+        /* CONTAINER */
+        .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+        
+        /* PAINEL ADMIN */
+        .admin-panel { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); display: none; }
+        .admin-panel.active { display: block; }
+        .admin-panel h3 { color: var(--primary); margin-bottom: 1rem; }
+        .form-row { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
+        .form-row input { padding: 0.8rem; border: 2px solid #eee; border-radius: 8px; font-size: 0.95rem; }
+        .form-row input:focus { outline: none; border-color: var(--primary); }
+        .photo-label { font-size: 0.85rem; color: #666; font-weight: 600; margin-top: 0.5rem; }
+        
+        /* INSTRUÇÕES */
+        .steps-box { background: #e3f2fd; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem; line-height: 1.8; }
+        .steps-box strong { color: #1565C0; }
+        
+        /* ID DE AFILIADO */
+        .affiliate-id-box { background: var(--light); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        
+        /* PRÉ-VISUALIZAÇÃO DAS IMAGENS */
+        .preview-container { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.8rem 0; }
+        .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; background: #ddd; }
+        
+        /* GRID DE PRODUTOS */
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+        .product-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); transition: transform 0.3s; cursor: pointer; }
+        .product-card:hover { transform: translateY(-3px); }
+        
+        /* CARROSSEL DE FOTOS NO CARD */
+        .photo-carousel { position: relative; width: 100%; height: 160px; overflow: hidden; }
+        .carousel-images { display: flex; transition: transform 0.3s ease; height: 100%; }
+        .carousel-img { min-width: 100%; height: 100%; object-fit: cover; }
+        .carousel-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .carousel-nav.prev { left: 6px; }
+        .carousel-nav.next { right: 6px; }
+        .carousel-dots { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); border: none; padding: 0; cursor: pointer; }
+        .dot.active { background: white; }
+        
+        .product-info { padding: 0.8rem; }
+        .product-name { font-size: 0.9rem; color: var(--dark); margin-bottom: 0.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .product-price { font-size: 1.1rem; font-weight: bold; color: var(--primary); }
+        .product-old-price { font-size: 0.75rem; color: #999; text-decoration: line-through; margin-left: 0.4rem; }
+        .product-discount { background: #ff4444; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-left: 0.4rem; }
+        .buy-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 0.6rem; border-radius: 6px; font-weight: 600; margin-top: 0.5rem; cursor: pointer; font-size: 0.9rem; text-decoration: none; display: inline-block; text-align: center; }
+        .buy-btn:hover { background: #e65c00; }
+        .admin-buttons { display: flex; gap: 0.3rem; margin-top: 0.5rem; }
+        .admin-buttons button { flex: 1; padding: 0.4rem; font-size: 0.8rem; }
+        
+        .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: white; padding: 0.9rem 1.5rem; border-radius: 8px; z-index: 9999; opacity: 0; transition: all 0.3s; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .empty-state { text-align: center; padding: 3rem; color: #999; }
+    </style>
 </head>
 <body>
 
-  <!-- Cabeçalho -->
-  <header>
-    <div class="header-top">
-      <div class="logo">🔥 Ofertas Relâmpago</div>
-      <div id="headerAuthArea">
-        <button class="login-header-btn" id="openLoginBtn" onclick="openAuthModal()">Entrar</button>
-      </div>
-    </div>
-    <div class="search-bar">
-      <span>🔍</span>
-      <input type="text" id="searchInput" placeholder="Buscar ofertas...">
-    </div>
-  </header>
-
-  <!-- Produtos -->
-  <div class="section-title">⚡ Compre antes que acabe!</div>
-  <div class="products-grid" id="productsContainer"></div>
-
-  <!-- Modal da Imagem -->
-  <div class="image-modal" id="imageModal">
-    <span class="modal-close" onclick="closeImageModal()">&times;</span>
-    <div class="modal-product-name" id="modalProductName"></div>
-    <div class="modal-timer" id="modalTimer">⏰ 00:00</div>
-    <img id="modalImage" src="" alt="Produto">
-    <button class="modal-buy-btn" id="modalBuyBtn">🛒 Comprar Agora</button>
-  </div>
-
-  <!-- Tela de Login/Cadastro -->
-  <div class="auth-modal" id="authModal">
-    <div class="auth-box">
-      <h3 id="authTitle">🔐 Entrar</h3>
-      <div class="error-msg" id="authError"></div>
-      <div class="success-msg" id="authSuccess"></div>
-      
-      <input type="email" id="authEmail" placeholder="Seu e-mail">
-      <input type="password" id="authPassword" placeholder="Sua senha">
-      
-      <button class="auth-btn" id="authSubmitBtn" onclick="handleAuth()">Entrar</button>
-      <div class="auth-switch" id="authSwitchText" onclick="toggleAuthMode()">Não tem conta? Clique aqui</div>
-      <div class="close-auth" onclick="closeAuthModal()">Voltar</div>
-    </div>
-  </div>
-
-  <!-- Painel Admin Melhorado -->
-  <div class="admin-panel" id="adminPanel">
-    <div class="admin-header">
-      <h3>⚙️ Cadastrar Produto</h3>
-      <span class="close-admin" onclick="closeAdminPanel()">&times;</span>
-    </div>
-    <div class="admin-content">
-    
-      <div class="tip-box">
-        💡 <strong>Dica rápida:</strong> Abra o produto na Shopee → copie os dados um por um e cole aqui!<br>
-        Para a imagem: clique com botão direito na imagem da Shopee → "Copiar endereço da imagem" → cole abaixo ✅
-      </div>
-    
-      <h4>📝 Nome do Produto</h4>
-      <input type="text" id="prodName" placeholder="Ex: Fone de Ouvido Bluetooth Sem Fio">
-      <div class="hint">Copie o nome da Shopee e cole aqui</div>
-      
-      <h4>💰 Preço de Venda</h4>
-      <input type="text" id="prodPrice" placeholder="Ex: 89.90">
-      <div class="hint">Digite apenas números e ponto, sem R$</div>
-      
-      <h4>🏷️ Preço Original (de R$...)</h4>
-      <input type="text" id="prodOriginalPrice" placeholder="Ex: 149.90 (deixe vazio se não tiver)">
-      <div class="hint">Para mostrar o risco e calcular o desconto automaticamente</div>
-      
-      <h4>🖼️ Link da Imagem</h4>
-      <input type="text" id="prodImage" placeholder="Cole o endereço da imagem aqui" oninput="previewImage(this.value)">
-      <div class="hint">Botão direito na foto → Copiar endereço da imagem</div>
-      
-      <div class="image-preview-area" id="imagePreviewArea">
-        <p>📷 A imagem aparecerá aqui quando você colar o link</p>
-      </div>
-      
-      <h4>🔗 Link de Afiliado da Shopee</h4>
-      <input type="text" id="prodLink" placeholder="Cole seu link de afiliado aqui">
-      <div class="hint">O link que você pegou na Shopee com seu código de afiliado</div>
-      
-      <h4>⏰ Tempo da Oferta</h4>
-      <input type="text" id="prodTime" placeholder="Ex: 15">
-      <div class="hint">Quantos minutos vai durar a promoção</div>
-      
-      <button class="save-btn" onclick="saveProduct()">✅ SALVAR PRODUTO</button>
-      
-      <div class="divider"></div>
-      
-      <div class="product-list">
-        <h4>📋 Meus Produtos <span id="productCount">0</span></h4>
-        <div id="adminProductList"></div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // ================= CONFIGURAÇÃO =================
-    const ADMIN_DOMAIN = '@admin.com';
-    
-    let isRegisterMode = false;
-    let activeTimers = {};
-    let products = JSON.parse(localStorage.getItem('myProducts')) || [];
-    let users = JSON.parse(localStorage.getItem('siteUsers')) || [];
-    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-
-    // ================= PREVISUALIZAR IMAGEM =================
-    function previewImage(url) {
-      const area = document.getElementById('imagePreviewArea');
-      if (url && url.length > 10) {
-        area.innerHTML = `<img src="${url}" alt="Prévia" onerror="this.parentElement.innerHTML='<p style=\\'color:red\\'>❌ Link inválido ou imagem não carregou</p>'">`;
-        area.classList.add('has-image');
-      } else {
-        area.innerHTML = '<p>📷 A imagem aparecerá aqui quando você colar o link</p>';
-        area.classList.remove('has-image');
-      }
-    }
-
-    // ================= VERIFICAR USUÁRIO LOGADO =================
-    function updateHeaderAuthArea() {
-      const area = document.getElementById('headerAuthArea');
-      if (currentUser) {
-        area.innerHTML = `
-          <div class="user-info">
-            <span>${currentUser.email.split('@')[0]}</span>
-            <button class="logout-btn" onclick="logout()">Sair</button>
-          </div>
-        `;
-      } else {
-        area.innerHTML = `<button class="login-header-btn" id="openLoginBtn" onclick="openAuthModal()">Entrar</button>`;
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem('currentUser');
-      currentUser = null;
-      closeAdminPanel();
-      update
-      updateHeaderAuthArea();
-    }
-
-    // ================= TELA DE LOGIN =================
-    function openAuthModal() {
-      document.getElementById('authModal').classList.add('show');
-      document.getElementById('authEmail').value = '';
-      document.getElementById('authPassword').value = '';
-      document.getElementById('authError').style.display = 'none';
-      document.getElementById('authSuccess').style.display = 'none';
-      isRegisterMode = false;
-      updateAuthMode();
-    }
-
-    function closeAuthModal() {
-      document.getElementById('authModal').classList.remove('show');
-    }
-
-    function toggleAuthMode() {
-      isRegisterMode = !isRegisterMode;
-      updateAuthMode();
-    }
-
-    function updateAuthMode() {
-      if (isRegisterMode) {
-        document.getElementById('authTitle').textContent = '📝 Criar Conta';
-        document.getElementById('authSubmitBtn').textContent = 'Criar Conta';
-        document.getElementById('authSwitchText').textContent = 'Já tem conta? Entre aqui';
-      } else {
-        document.getElementById('authTitle').textContent = '🔐 Entrar';
-        document.getElementById('authSubmitBtn').textContent = 'Entrar';
-        document.getElementById('authSwitchText').textContent = 'Não tem conta? Clique aqui';
-      }
-      document.getElementById('authError').style.display = 'none';
-      document.getElementById('authSuccess').style.display = 'none';
-    }
-
-    function showError(msg) {
-      document.getElementById('authError').textContent = msg;
-      document.getElementById('authError').style.display = 'block';
-    }
-
-    function showSuccess(msg) {
-      document.getElementById('authSuccess').textContent = msg;
-      document.getElementById('authSuccess').style.display = 'block';
-    }
-
-    function handleAuth() {
-      const email = document.getElementById('authEmail').value.trim().toLowerCase();
-      const password = document.getElementById('authPassword').value;
-
-      if (!email || !password) {
-        showError('Preencha todos os campos!');
-        return;
-      }
-
-      // ✅ É Admin?
-      if (email.endsWith(ADMIN_DOMAIN)) {
-        let admin = users.find(u => u.email === email);
-        if (!admin) {
-          if (password.length < 4) {
-            showError('Use pelo menos 4 caracteres na senha');
-            return;
-          }
-          admin = { email, password, isAdmin: true };
-          users.push(admin);
-          saveUsers();
-          showSuccess('Conta administrativa criada! ✅');
-          setTimeout(() => {
-            currentUser = admin;
-            saveCurrentUser();
-            closeAuthModal();
-            openAdminPanel();
-            updateHeaderAuthArea();
-          }, 800);
-          return;
-        }
-        if (admin.password === password) {
-          currentUser = admin;
-          saveCurrentUser();
-          closeAuthModal();
-          openAdminPanel();
-          updateHeaderAuthArea();
-          return;
-        } else {
-          showError('Senha incorreta!');
-          return;
-        }
-      }
-
-      // Usuário comum
-      if (isRegisterMode) {
-        if (users.find(u => u.email === email)) {
-          showError('Este e-mail já está cadastrado!');
-          return;
-        }
-        if (password.length < 4) {
-          showError('Use pelo menos 4 caracteres na senha');
-          return;
-        }
-        users.push({ email, password, isAdmin: false });
-        saveUsers();
-        showSuccess('Conta criada com sucesso! ✅');
-        setTimeout(() => {
-          currentUser = { email, isAdmin: false };
-          saveCurrentUser();
-          closeAuthModal();
-          updateHeaderAuthArea();
-        }, 800);
-      } else {
-        const user = users.find(u => u.email === email && u.password === password);
-        if (!user) {
-          showError('E-mail ou senha incorretos!');
-          return;
-        }
-        currentUser = user;
-        saveCurrentUser();
-        closeAuthModal();
-        updateHeaderAuthArea();
-      }
-    }
-
-    function saveUsers() {
-      localStorage.setItem('siteUsers', JSON.stringify(users));
-    }
-
-    function saveCurrentUser() {
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    }
-
-    // ================= PAINEL ADMIN =================
-    function openAdminPanel() {
-      document.getElementById('adminPanel').classList.add('show');
-      renderAdminProductList();
-    }
-
-    function closeAdminPanel() {
-      document.getElementById('adminPanel').classList.remove('show');
-      clearProductForm();
-    }
-
-    function clearProductForm() {
-      document.getElementById('prodName').value = '';
-      document.getElementById('prodPrice').value = '';
-      document.getElementById('prodOriginalPrice').value = '';
-      document.getElementById('prodImage').value = '';
-      document.getElementById('prodLink').value = '';
-      document.getElementById('prodTime').value = '';
-      document.getElementById('imagePreviewArea').innerHTML = '<p>📷 A imagem aparecerá aqui quando você colar o link</p>';
-      document.getElementById('imagePreviewArea').classList.remove('has-image');
-    }
-
-    function saveProduct() {
-      const name = document.getElementById('prodName').value.trim();
-      const price = parseFloat(document.getElementById('prodPrice').value);
-      const originalPrice = parseFloat(document.getElementById('prodOriginalPrice').value) || price;
-      const image = document.getElementById('prodImage').value.trim();
-      const link = document.getElementById('prodLink').value.trim();
-      const timeInMinutes = parseInt(document.getElementById('prodTime').value) || 15;
-
-      if (!name || !price || !image || !link) {
-        alert('⚠️ Preencha nome, preço, imagem e link!');
-        return;
-      }
-
-      const discount = originalPrice > price ? Math.round((1 - price / originalPrice) * 100) : 0;
-
-      const newProduct = {
-        id: Date.now(),
-        name,
-        price,
-        originalPrice,
-        discount,
-        image,
-        link,
-        timeInMinutes
-      };
-
-      products.unshift(newProduct);
-      saveProducts();
-      renderProducts(products);
-      renderAdminProductList();
-      clearProductForm();
-      alert('✅ Produto cadastrado com sucesso!');
-    }
-
-    function deleteProduct(id) {
-      if (confirm('❌ Excluir este produto?')) {
-        products = products.filter(p => p.id !== id);
-        saveProducts();
-        renderProducts(products);
-        renderAdminProductList();
-      }
-    }
-
-    function saveProducts() {
-      localStorage.setItem('myProducts', JSON.stringify(products));
-    }
-
-    function renderAdminProductList() {
-      const list = document.getElementById('adminProductList');
-      document.getElementById('productCount').textContent = `(${products.length})`;
-      
-      if (products.length === 0) {
-        list.innerHTML = '<p style="color:#999; font-size:13px; text-align:center; padding:20px;">Nenhum produto cadastrado ainda</p>';
-        return;
-      }
-      
-      list.innerHTML = products.map(p => `
-        <div class="product-item">
-          <div style="flex:1; font-size:13px;">
-            <div style="color:#333; font-weight:500;">${p.name.length > 28 ? p.name.substring(0, 28) + '...' : p.name}</div>
-            <div style="color:#EE4D2D; font-weight:600;">R$ ${p.price.toFixed(2)} ${p.discount > 0 ? `<span style="font-size:11px; color:#999;">- ${p.discount}%</span>` : ''}</div>
-          </div>
-          <button class="delete-btn" onclick="deleteProduct(${p.id})">Excluir</button>
+<!-- CABEÇALHO (Aparece limpo e direto para todos) -->
+<header>
+    <div class="header-content">
+        <h1>🔥 Minhas Ofertas</h1>
+        <div class="header-buttons">
+            <button class="btn btn-secondary" id="btnLoginModal" style="font-size:0.85rem; padding:0.5rem 0.8rem; background:white; color:var(--primary);" onclick="abrirModalLogin()">🔑 Entrar</button>
+            <button class="btn btn-secondary" id="adminBtn" style="display:none; font-size:0.85rem; padding:0.5rem 0.8rem;" onclick="toggleAdminPanel()">⚙️ Admin</button>
+            <button class="btn btn-danger" id="btnSair" style="display:none; font-size:0.85rem; padding:0.5rem 0.8rem;" onclick="fazerLogout()">Sair</button>
         </div>
-      `).join('');
-    }
+    </div>
+</header>
 
-    // ================= MODAL DE IMAGEM =================
-    let currentModalProduct = null;
-    let modalTimerInterval = null;
+<div class="container">
 
-    function openProductModal(product) {
-      currentModalProduct = product;
-      document.getElementById('modalImage').src = product.image;
-      document.getElementById('modalProductName').textContent = product.name;
-      document.getElementById('modalBuyBtn').onclick = () => {
-        if (currentUser) {
-          window.open(product.link, '_blank');
-        } else {
-          closeImageModal();
-          openAuthModal();
-        }
-      };
-      startModalTimer(product);
-      document.getElementById('imageModal').classList.add('show');
-    }
-
-    function closeImageModal() {
-      document.getElementById('imageModal').classList.remove('show');
-      if (modalTimerInterval) clearInterval(modalTimerInterval);
-    }
-
-    function startModalTimer(product) {
-      let endTime = parseInt(localStorage.getItem(`timer_${product.id}`));
-      if (!endTime || new Date().getTime() > endTime) {
-        endTime = new Date().getTime() + (product.timeInMinutes * 60 * 1000);
-        localStorage.setItem(`timer_${product.id}`, endTime);
-      }
-
-      function updateModalTime() {
-        const now = new Date().getTime();
-        const distance = endTime - now;
-        if (distance < 0) {
-          document.getElementById('modalTimer').textContent = '⏰ TEMPO ESGOTADO!';
-          clearInterval(modalTimerInterval);
-          return;
-        }
-        const mins = Math.floor((distance % (1000 * 60)) / (1000 * 60));
-        const secs = Math.floor((distance % (1000)) / 1000);
-        document.getElementById('modalTimer').textContent = `⏰ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-      }
-      updateModalTime();
-      modalTimerInterval = setInterval(updateModalTime, 1000);
-    }
-
-    // ================= CRONÔMETROS =================
-    function startProductTimers() {
-      products.forEach(product => {
-        let endTime = parseInt(localStorage.getItem(`timer_${product.id}`));
-        if (!endTime || new Date().getTime() > endTime) {
-          endTime = new Date().getTime() + (product.timeInMinutes * 60 * 1000);
-          localStorage.setItem(`timer_${product.id}`, endTime);
-        }
-      });
-      
-      setInterval(() => {
-        products.forEach(product => {
-          const endTime = parseInt(localStorage.getItem(`timer_${product.id}`));
-          const now = new Date().getTime();
-          const distance = endTime - now;
-          const timerEl = document.getElementById(`prod-timer-${product.id}`);
-          if (!timerEl) return;
-          
-          if (distance < 0) {
-            timerEl.innerHTML = '<span class="time">ACABOU!</span>';
-            return;
-          }
-          const mins = Math.floor((distance % (1000 * 60)) / (1000 * 60));
-          const secs = Math.floor((distance % (1000)) / 1000);
-          timerEl.innerHTML = `⏰ <span class="time">${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}</span> restantes`;
-        });
-      }, 1000);
-    }
-
-    // ================= RENDERIZAR PRODUTOS =================
-    function renderProducts(productsToRender) {
-      const container = document.getElementById('productsContainer');
-      
-      if (productsToRender.length === 0) {
-        container.innerHTML = '<div class="empty-state">Nenhum produto encontrado 😕</div>';
-        return;
-      }
-      
-      container.innerHTML = productsToRender.map(product => `
-        <div class="product-card">
-          <img src="${product.image}" alt="${product.name}" class="product-image" 
-               onclick='openProductModal(${JSON.stringify(product).replace(/'/g, "\\'")})' loading="lazy">
-          <div class="product-info">
-            <div class="product-name">${product.name}</div>
-            <div>
-              <span class="product-price">R$ ${product.price.toFixed(2)}</span>
-              ${product.discount ? `<span class="product-discount">-${product.discount}%</span>` : ''}
-            </div>
-            <div class="product-timer" id="prod-timer-${product.id}">
-              ⏰ <span class="time">${String(product.timeInMinutes).padStart(2, '0')}:00</span> restantes
-            </div>
-            <button class="buy-btn" onclick='openProductModal(${JSON.stringify(product).replace(/'/g, "\\'")})'>
-              ${currentUser ? '🛒 Comprar Agora' : '🔐 Entrar para Comprar'}
-            </button>
-          </div>
+    <!-- PAINEL DE ADMIN (Só aparece se você estiver logado no Firebase Auth) -->
+    <div class="admin-panel" id="adminPanel">
+        <h3>➕ Adicionar Nova Oferta (Firebase)</h3>
+        
+        <div class="steps-box">
+            <strong>📱 Passo a passo na Shopee:</strong><br>
+            <strong>1º →</strong> Abra o produto na Shopee<br>
+            <strong>2º →</strong> Segure na imagem → Copiar endereço da imagem<br>
+            <strong>3º →</strong> Cole até <strong>4 fotos</strong> nos campos abaixo<br>
+            <strong>4º →</strong> Compartilhe o produto → Copie o link<br>
+            <strong>5º →</strong> Preencha nome e preço → Salvar! ✅
         </div>
-      `).join('');
+
+        <div class="affiliate-id-box">
+            <strong>🏷️ Seu ID de Afiliado Shopee:</strong>
+            <input type="text" id="affiliateId" placeholder="Ex: seu-id-afiliado" style="width:100%; margin-bottom:0;" oninput="salvarAffiliateId()">
+        </div>
+
+        <h4>📦 Dados do Produto</h4>
+        <div class="form-row">
+            <input type="text" id="prodNome" placeholder="📝 Nome do produto">
+            <span class="photo-label">🖼️ Foto 1 (principal):</span>
+            <input type="text" id="prodImagem1" placeholder="Cole o link da 1ª foto" oninput="mostrarPreview()">
+            <span class="photo-label">📷 Foto 2 (opcional):</span>
+            <input type="text" id="prodImagem2" placeholder="Cole o link da 2ª foto" oninput="mostrarPreview()">
+            <span class="photo-label">📷 Foto 3 (opcional):</span>
+            <input type="text" id="prodImagem3" placeholder="Cole o link da 3ª foto" oninput="mostrarPreview()">
+            <span class="photo-label">📷 Foto 4 (opcional):</span>
+            <input type="text" id="prodImagem4" placeholder="Cole o link da 4ª foto" oninput="mostrarPreview()">
+        </div>
+        
+        <div class="preview-container" id="previewContainer"></div>
+        
+        <div class="form-row">
+            <input type="text" id="prodLinkShopee" placeholder="🔗 Link de compartilhamento da Shopee">
+            <input type="number" id="prodPreco" placeholder="💰 Preço atual R$" step="0.01">
+            <input type="number" id="prodPrecoAntigo" placeholder="📐 Preço antigo (de R$) - opcional" step="0.01">
+        </div>
+        
+        <button class="btn btn-success" onclick="adicionarProduto()">✅ Salvar Produto no Firebase</button>
+        
+        <hr style="margin:1.5rem 0; border:none; border-top:1px solid #eee;">
+        
+        <h4>📋 Produtos Cadastrados</h4>
+        <div id="listaAdmin"></div>
+    </div>
+
+    <!-- LISTA DE PRODUTOS (Visível para todos imediatamente) -->
+    <div id="produtosSection">
+        <div class="empty-state" id="emptyState" style="display:none;">
+            <h3>🛍️ Nenhuma oferta cadastrada ainda</h3>
+            <p>Volte em breve! Em breve teremos muitas promoções incríveis para você ✨</p>
+        </div>
+        <div class="products-grid" id="produtosGrid"></div>
+    </div>
+</div>
+
+<!-- JANELINHA (MODAL) DE LOGIN DO ADMIN -->
+<div class="login-modal" id="loginModal">
+    <div class="login-box">
+        <button class="close-modal" onclick="fecharModalLogin()">×</button>
+        <h3>🔐 Acesso Restrito</h3>
+        <input type="email" id="adminEmail" placeholder="Seu e-mail de Administrador">
+        <input type="password" id="adminPassword" placeholder="Sua senha">
+        <button class="btn btn-primary" onclick="fazerLoginFirebase()">Entrar como Admin</button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ================= CONFIGURAÇÃO DO FIREBASE =================
+const firebaseConfig = {
+  apiKey: "AIzaSyApV8icirJpVWQ3FOqsf6MAlB3IbmLvRvM",
+  authDomain: "shoppin-d8da7.firebaseapp.com",
+  projectId: "shoppin-d8da7",
+  storageBucket: "shoppin-d8da7.firebasestorage.app",
+  messagingSenderId: "918018862332",
+  appId: "1:918018862332:web:3d8294d734dc8619a07b79",
+  measurementId: "G-N09ZYRJ9ZY"
+};
+
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let produtos = [];
+let affiliateId = localStorage.getItem('affiliateId') || '';
+let carouselIndices = {};
+
+// Carrega os produtos assim que a página abre para qualquer visitante
+window.onload = function() {
+    if (affiliateId) {
+        const campo = document.getElementById('affiliateId');
+        if (campo) campo.value = affiliateId;
+    }
+    carregarProdutosDoFirebase();
+};
+
+// Monitora se o Admin está logado ou não via Firebase Auth
+auth.onAuthStateChanged((user) => {
+    const adminBtn = document.getElementById('adminBtn');
+    const btnSair = document.getElementById('btnSair');
+    const btnLoginModal = document.getElementById('btnLoginModal');
+    const adminPanel = document.getElementById('adminPanel');
+
+    if (user) {
+        // Usuário logado é o Administrador
+        adminBtn.style.display = 'block';
+        btnSair.style.display = 'block';
+        btnLoginModal.style.display = 'none';
+        fecharModalLogin();
+        mostrarToast('✅ Conectado como Administrador');
+    } else {
+        // Visitante comum (ou deslogado)
+        adminBtn.style.display = 'none';
+        btnSair.style.display = 'none';
+        btnLoginModal.style.display = 'block';
+        adminPanel.classList.remove('active');
+    }
+});
+
+// ================= MODAL DE LOGIN =================
+function abrirModalLogin() {
+    document.getElementById('loginModal').classList.add('active');
+}
+
+function fecharModalLogin() {
+    document.getElementById('loginModal').classList.remove('active');
+    document.getElementById('adminEmail').value = '';
+    document.getElementById('adminPassword').value = '';
+}
+
+// Fazer login usando o Firebase Authentication oficial
+async function fazerLoginFirebase() {
+    const email = document.getElementById('adminEmail').value.trim();
+    const senha = document.getElementById('adminPassword').value;
+
+    if (!email || !senha) {
+        mostrarToast('⚠️ Preencha o e-mail e a senha!');
+        return;
     }
 
-    // ================= BUSCA =================
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      const term = e.target.value.toLowerCase().trim();
-      if (!term) {
-        renderProducts(products);
-        return;
-      }
-      const filtered = products.filter(p => p.name.toLowerCase().includes(term));
-      renderProducts(filtered);
+    try {
+        await auth.signInWithEmailAndPassword(email, senha);
+    } catch (error) {
+        console.error("Erro no login:", error);
+        mostrarToast('❌ E-mail ou senha incorretos!');
+    }
+}
+
+function fazerLogout() {
+    auth.signOut().then(() => {
+        mostrarToast('👋 Você saiu da conta de admin.');
+        document.getElementById('adminPanel').classList.remove('active');
+        renderizarProdutos(); // Atualiza a tela para remover botões de exclusão
     });
+}
 
-    // ================= INICIALIZAR =================
-    updateHeaderAuthArea();
-    renderProducts(products);
-    startProductTimers();
-  </script>
+// ================= PAINEL ADMIN =================
+function toggleAdminPanel() {
+    const panel = document.getElementById('adminPanel');
+    panel.classList.toggle('active');
+    if (panel.classList.contains('active')) {
+        atualizarListaAdmin();
+    }
+}
+
+function salvarAffiliateId() {
+    affiliateId = document.getElementById('affiliateId').value.trim();
+    localStorage.setItem('affiliateId', affiliateId);
+    mostrarToast('✅ ID de afiliado salvo!');
+}
+
+function construirLinkComAfiliado(linkOriginal) {
+    if (!affiliateId) return linkOriginal;
+    const separador = linkOriginal.includes('?') ? '&' : '?';
+    return `${linkOriginal}${separador}afid=${affiliateId}`;
+}
+
+// ================= PRÉ-VISUALIZAÇÃO DE FOTOS =================
+function mostrarPreview() {
+    const imagens = [];
+    for (let i = 1; i <= 4; i++) {
+        const link = document.getElementById(`prodImagem${i}`).value.trim();
+        if (link) imagens.push(link);
+    }
+    
+    const container = document.getElementById('previewContainer');
+    container.innerHTML = '';
+    
+    imagens.forEach((img, idx) => {
+        const el = document.createElement('img');
+        el.src = img;
+        el.className = 'preview-img';
+        el.alt = `Foto ${idx + 1}`;
+        el.onerror = function() { this.style.display = 'none'; };
+        container.appendChild(el);
+    });
+}
+
+// ================= FIRESTORE (BANCO DE DADOS) =================
+async function carregarProdutosDoFirebase() {
+    try {
+        const snapshot = await db.collection('produtos').orderBy('criadoEm', 'desc').get();
+        produtos = [];
+        snapshot.forEach(doc => {
+            produtos.push({ id: doc.id, ...doc.data() });
+        });
+        renderizarProdutos();
+        if (auth.currentUser) atualizarListaAdmin();
+    } catch (error) {
+        console.error("Erro ao carregar do Firebase: ", error);
+        mostrarToast('❌ Erro ao carregar ofertas.');
+    }
+}
+
+async function adicionarProduto() {
+    if (!auth.currentUser) return;
+    
+    const nome = document.getElementById('prodNome').value.trim();
+    const link = document.getElementById('prodLinkShopee').value.trim();
+    const preco = parseFloat(document.getElementById('prodPreco').value);
+    const precoAntigo = parseFloat(document.getElementById('prodPrecoAntigo').value) || 0;
+
+    const imagens = [];
+    for (let i = 1; i <= 4; i++) {
+        const imgLink = document.getElementById(`prodImagem${i}`).value.trim();
+        if (imgLink) imagens.push(imgLink);
+    }
+
+    if (!nome || imagens.length === 0 || !link || !preco) {
+        mostrarToast('⚠️ Preencha nome, pelo menos 1 foto, link e preço!');
+        return;
+    }
+
+    const novoProduto = {
+        nome,
+        imagens,
+        link,
+        preco,
+        precoAntigo,
+        criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+        await db.collection('produtos').add(novoProduto);
+        mostrarToast('✅ Produto salvo no Firebase!');
+
+        // Limpar formulário
+        document.getElementById('prodNome').value = '';
+        document.getElementById('prodImagem1').value = '';
+        document.getElementById('prodImagem2').value = '';
+        document.getElementById('prodImagem3').value = '';
+        document.getElementById('prodImagem4').value = '';
+        document.getElementById('prodLinkShopee').value = '';
+        document.getElementById('prodPreco').value = '';
+        document.getElementById('prodPrecoAntigo').value = '';
+        document.getElementById('previewContainer').innerHTML = '';
+
+        carregarProdutosDoFirebase();
+    } catch (error) {
+        console.error("Erro ao salvar: ", error);
+        mostrarToast('❌ Erro ao salvar produto.');
+    }
+}
+
+async function excluirProduto(id) {
+    if (!auth.currentUser) return;
+    if (!confirm('Tem certeza que deseja excluir este produto do Firebase?')) return;
+    try {
+        await db.collection('produtos').doc(id).delete();
+        mostrarToast('🗑️ Produto excluído!');
+        carregarProdutosDoFirebase();
+    } catch (error) {
+        console.error("Erro ao excluir: ", error);
+        mostrarToast('❌ Erro ao excluir.');
+    }
+}
+
+function calcularDesconto(precoAtual, precoAntigo) {
+    if (!precoAntigo || precoAntigo <= precoAtual) return 0;
+    return Math.round(((precoAntigo - precoAtual) / precoAntigo) * 100);
+}
+
+// ================= CARROSSEL =================
+function nextPhoto(produtoId) {
+    const produto = produtos.find(p => p.id === produtoId);
+    if (!produto) return;
+    if (carouselIndices[produtoId] === undefined) carouselIndices[produtoId] = 0;
+    carouselIndices[produtoId] = (carouselIndices[produtoId] + 1) % produto.imagens.length;
+    atualizarCarrossel(produtoId);
+}
+
+function prevPhoto(produtoId) {
+    const produto = produtos.find(p => p.id === produtoId);
+    if (!produto) return;
+    if (carouselIndices[produtoId] === undefined) carouselIndices[produtoId] = 0;
+    carouselIndices[produtoId] = (carouselIndices[produtoId] - 1 + produto.imagens.length) % produto.imagens.length;
+    atualizarCarrossel(produtoId);
+}
+
+function goToPhoto(produtoId, index) {
+    carouselIndices[produtoId] = index;
+    atualizarCarrossel(produtoId);
+}
+
+function atualizarCarrossel(produtoId) {
+    const produto = produtos.find(p => p.id === produtoId);
+    if (!produto) return;
+    if (carouselIndices[produtoId] === undefined) carouselIndices[produtoId] = 0;
+    const idx = carouselIndices[produtoId];
+    
+    const container = document.getElementById(`carousel-${produtoId}`);
+    if (container) container.style.transform = `translateX(-${idx * 100}%)`;
+    
+    const dotsContainer = document.getElementById(`dots-${produtoId}`);
+    if (dotsContainer) {
+        dotsContainer.querySelectorAll('.dot').forEach((dot, i) => {
+            dot.classList.toggle('active', i === idx);
+        });
+    }
+}
+
+// ================= RENDERIZAÇÃO =================
+function renderizarProdutos() {
+    const grid = document.getElementById('produtosGrid');
+    const emptyState = document.getElementById('emptyState');
+    const isAdmin = auth.currentUser !== null;
+    
+    if (produtos.length === 0) {
+        emptyState.style.display = 'block';
+        grid.innerHTML = '';
+        return;
+    }
+    
+    emptyState.style.display = 'none';
+    grid.innerHTML = produtos.map(produto => {
+        const desconto = calcularDesconto(produto.preco, produto.precoAntigo);
+        const linkComAfiliado = construirLinkComAfiliado(produto.link);
+        const id = produto.id;
+        const temVariasFotos = produto.imagens && produto.imagens.length > 1;
+        
+        return `
+            <div class="product-card">
+                <div class="photo-carousel">
+                    <div class="carousel-images" id="carousel-${id}">
+                        ${produto.imagens ? produto.imagens.map(img => 
+                            `<img src="${img}" alt="${produto.nome}" class="carousel-img" loading="lazy" 
+                             onerror="this.src='https://via.placeholder.com/300x300/FF6A00/FFFFFF?text=Produto'">`
+                        ).join('') : ''}
+                    </div>
+                    
+                    ${temVariasFotos ? `
+                        <button class="carousel-nav prev" onclick="prevPhoto('${id}')">‹</button>
+                        <button class="carousel-nav next" onclick="nextPhoto('${id}')">›</button>
+                        <div class="carousel-dots" id="dots-${id}">
+                            ${produto.imagens.map((_, i) => 
+                                `<button class="dot ${i === 0 ? 'active' : ''}" onclick="goToPhoto('${id}', ${i})"></button>`
+                            ).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="product-info">
+                    <h3 class="product-name">${produto.nome}</h3>
+                    <div>
+                        <span class="product-price">R$ ${produto.preco.toFixed(2).replace('.', ',')}</span>
+                        ${desconto > 0 ? `<span class="product-discount">-${desconto}%</span>` : ''}
+                    </div>
+                    ${produto.precoAntigo > 0 ? `<span class="product-old-price">De R$ ${produto.precoAntigo.toFixed(2).replace('.', ',')}</span>` : ''}
+                    <a href="${linkComAfiliado}" target="_blank" rel="noopener" class="buy-btn">🛒 Comprar na Shopee</a>
+                    ${isAdmin ? `
+                        <div class="admin-buttons">
+                            <button class="btn btn-danger" onclick="excluirProduto('${id}')">🗑️ Excluir</button>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function atualizarListaAdmin() {
+    const lista = document.getElementById('listaAdmin');
+    if (produtos.length === 0) {
+        lista.innerHTML = '<p style="color:#999; font-size:0.9rem;">Nenhum produto cadastrado ainda.</p>';
+        return;
+    }
+    
+    lista.innerHTML = produtos.map((produto, index) => `
+        <div style="padding:0.7rem; background:#f9f9f9; border-radius:6px; margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <div style="font-size:0.9rem; flex:1; min-width:180px;">
+                <strong>${index + 1}.</strong> ${produto.nome ? produto.nome.substring(0, 30) : ''}...<br>
+                <span style="color:var(--primary); font-weight:bold;">R$ ${produto.preco ? produto.preco.toFixed(2).replace('.', ',') : '0,00'}</span>
+                <span style="color:#666; font-size:0.8rem; margin-left:0.5rem;">📷 ${produto.imagens ? produto.imagens.length : 0} foto(s)</span>
+            </div>
+            <button class="btn btn-danger" style="padding:0.4rem 0.6rem; font-size:0.8rem;" onclick="excluirProduto('${produto.id}')">🗑️ Excluir</button>
+        </div>
+    `).join('');
+}
+
+function mostrarToast(mensagem) {
+    const toast = document.getElementById('toast');
+    toast.textContent = mensagem;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+}
+</script>
+
 </body>
 </html>
