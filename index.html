@@ -91,8 +91,8 @@
         .product-old-price { font-size: 0.7rem; color: #999; text-decoration: line-through; margin-left: 0.2rem; display: block; }
         .product-discount { background: #ff4444; color: white; font-size: 0.65rem; padding: 1px 4px; border-radius: 3px; display: inline-block; margin-left: 0.2rem; vertical-align: middle; }
         
-        /* CRONÔMETRO EM FUNDO PRETO POUCO ANTES DO BOTÃO */
-        .countdown-box { background: #111; color: #ffaa00; font-size: 0.72rem; font-weight: bold; text-align: center; padding: 4px; border-radius: 4px; margin-bottom: 0.4rem; }
+        /* CRONÔMETRO EM FUNDO PRETO SEM ÍCONE, COM ESPAÇO LIVRE */
+        .countdown-box { background: #111; color: #ffaa00; font-size: 0.75rem; font-weight: bold; text-align: center; padding: 6px 4px; border-radius: 4px; margin-bottom: 0.4rem; letter-spacing: 0.5px; }
         .countdown-box.expired { background: #ff4444; color: white; }
 
         .buy-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 0.5rem 0.2rem; border-radius: 6px; font-weight: 600; margin-top: auto; cursor: pointer; font-size: 0.82rem; text-decoration: none; display: block; text-align: center; }
@@ -100,13 +100,14 @@
         .admin-buttons { display: flex; gap: 0.3rem; margin-top: 0.4rem; }
         .admin-buttons button { flex: 1; padding: 0.3rem; font-size: 0.75rem; }
         
-        /* MODAL DE ZOOM GRANDE COM CARROSSEL PRÓPRIO */
+        /* MODAL DE ZOOM GRANDE CORRIGIDO COM CARROSSEL REAL */
         .image-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; align-items: center; justify-content: center; }
         .image-modal.active { display: flex; }
-        .modal-carousel-container { position: relative; width: 90vw; max-width: 500px; height: 75vh; display: flex; align-items: center; justify-content: center; }
-        .modal-carousel-images { display: flex; transition: transform 0.3s ease; width: 100%; height: 100%; align-items: center; overflow: hidden; }
-        .modal-carousel-img { min-width: 100%; height: 100%; object-fit: contain; }
-        .modal-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; }
+        .modal-carousel-container { position: relative; width: 95vw; max-width: 500px; height: 80vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .modal-carousel-images { display: flex; transition: transform 0.3s ease; width: 100%; height: 100%; align-items: center; }
+        .modal-slide { min-width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .modal-carousel-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .modal-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 3; }
         .modal-nav.prev { left: 10px; }
         .modal-nav.next { right: 10px; }
         .close-image-modal { position: absolute; top: 15px; right: 20px; background: white; border: none; font-size: 1.5rem; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-weight: bold; z-index: 3; }
@@ -140,7 +141,7 @@
             <strong>📱 Passo a passo na Shopee:</strong><br>
             <strong>1º →</strong> Abra o produto na Shopee e copie até 4 fotos<br>
             <strong>2º →</strong> Cole o link do vídeo (opcional) e o link de afiliado<br>
-            <strong>3º →</strong> Defina o tempo de expiração da oferta para gerar urgência! ✅
+            <strong>3º →</strong> Defina o tempo de expiração da oferta (Padrão 15 min) ✅
         </div>
 
         <div class="affiliate-id-box">
@@ -172,8 +173,8 @@
             
             <span class="photo-label">⏳ Tempo para expirar a oferta:</span>
             <select id="prodTempoMinutos">
-                <option value="15">15 Minutos</option>
-                <option value="20" selected>20 Minutos</option>
+                <option value="15" selected>15 Minutos</option>
+                <option value="20">20 Minutos</option>
                 <option value="30">30 Minutos</option>
                 <option value="60">1 Hora</option>
                 <option value="120">2 Horas</option>
@@ -209,7 +210,7 @@
     </div>
 </div>
 
-<!-- MODAL DE ZOOM COM CARROSSEL PARA PASSAR TODAS AS FOTOS -->
+<!-- MODAL DE ZOOM CORRIGIDO COM CARROSSEL REAL -->
 <div class="image-modal" id="imageModal">
     <button class="close-image-modal" onclick="fecharFotoGrande()">×</button>
     <div class="modal-carousel-container">
@@ -374,7 +375,7 @@ async function adicionarProduto() {
     const video = document.getElementById('prodVideo').value.trim();
     const preco = parseFloat(document.getElementById('prodPreco').value);
     const precoAntigo = parseFloat(document.getElementById('prodPrecoAntigo').value) || 0;
-    const tempoMinutos = parseInt(document.getElementById('prodTempoMinutos').value) || 20;
+    const tempoMinutos = parseInt(document.getElementById('prodTempoMinutos').value) || 15;
 
     const imagens = [];
     for (let i = 1; i <= 4; i++) {
@@ -387,6 +388,7 @@ async function adicionarProduto() {
         return;
     }
 
+    // Padrão de 15 minutos (ou o que for escolhido)
     const expiraEm = Date.now() + (tempoMinutos * 60 * 1000);
 
     const novoProduto = {
@@ -402,7 +404,7 @@ async function adicionarProduto() {
 
     try {
         await db.collection('produtos').add(novoProduto);
-        mostrarToast('✅ Produto salvo com cronômetro!');
+        mostrarToast('✅ Produto salvo com cronômetro de 15 min!');
 
         document.getElementById('prodNome').value = '';
         document.getElementById('prodImagem1').value = '';
@@ -440,7 +442,7 @@ function calcularDesconto(precoAtual, precoAntigo) {
     return Math.round(((precoAntigo - precoAtual) / precoAntigo) * 100);
 }
 
-// ================= CRONÔMETRO REGRESSIVO =================
+// ================= CRONÔMETRO REGRESSIVO FORMATO 00:15:00 =================
 function iniciarRelogiosRegressivos() {
     if (countdownInterval) clearInterval(countdownInterval);
 
@@ -450,20 +452,23 @@ function iniciarRelogiosRegressivos() {
             const timerElement = document.getElementById(`timer-${produto.id}`);
             if (!timerElement) return;
 
-            const expiraEm = produto.expiraEm || (agora + 20 * 60 * 1000);
+            // Se não tiver expiraEm salvo, define 15 minutos padrão
+            const expiraEm = produto.expiraEm || (agora + 15 * 60 * 1000);
             const diff = expiraEm - agora;
 
             if (diff <= 0) {
                 timerElement.innerHTML = `⚠️ Oferta Expirada!`;
                 if (timerElement.parentElement) timerElement.parentElement.classList.add('expired');
             } else {
+                const horas = Math.floor(diff / (1000 * 60 * 60));
                 const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const segundos = Math.floor((diff % (1000 * 60)) / 1000);
                 
+                const horaFormatada = String(horas).padStart(2, '0');
                 const minFormatado = String(minutos).padStart(2, '0');
                 const segFormatado = String(segundos).padStart(2, '0');
                 
-                timerElement.innerHTML = `⏳ Oferta expira em ${minFormatado}:${segFormatado}`;
+                timerElement.innerHTML = `00:${minFormatado}:${segFormatado}`;
             }
         });
     };
@@ -515,18 +520,20 @@ function atualizarCarrossel(produtoId) {
     }
 }
 
-// ================= ZOOM COM CARROSSEL PARA PASSAR TODAS AS FOTOS =================
+// ================= ZOOM CORRIGIDO COM CARROSSEL REAL =================
 function abrirZoomProduto(produtoId) {
     const produto = produtos.find(p => p.id === produtoId);
     if (!produto || !produto.imagens || produto.imagens.length === 0) return;
 
     modalImagensAtuais = produto.imagens;
-    modalIndiceAtual = carouselIndices[produtoId] || 0; // Pega exatamente a foto que estava aparecendo
+    modalIndiceAtual = carouselIndices[produtoId] || 0;
 
     const modalImagesContainer = document.getElementById('modalCarouselImages');
-    modalImagesContainer.innerHTML = modalImagensAtuais.map(img => 
-        `<img src="${img}" class="modal-carousel-img" alt="Zoom Foto">`
-    ).join('');
+    modalImagesContainer.innerHTML = modalImagensAtuais.map(img => `
+        <div class="modal-slide">
+            <img src="${img}" class="modal-carousel-img" alt="Zoom Foto">
+        </div>
+    `).join('');
 
     atualizarModalCarrossel();
     document.getElementById('imageModal').classList.add('active');
@@ -589,12 +596,11 @@ function renderizarProdutos() {
                 <!-- CARROSSEL DE FOTOS -->
                 <div class="photo-carousel">
                     <div class="carousel-images" id="carousel-${id}">
-                        ${midias.map((midia, mIndex) => {
+                        ${midias.map((midia) => {
                             const ehVideo = midia.includes('mp4') || midia.includes('webm') || midia.includes('youtube') || midia.includes('youtu.be');
                             if (ehVideo) {
                                 return `<video src="${midia}" class="carousel-video" controls muted></video>`;
                             } else {
-                                // Ao clicar na foto, abre o zoom em carrossel passando o ID do produto
                                 return `<img src="${midia}" alt="${produto.nome}" class="carousel-img" loading="lazy" onclick="abrirZoomProduto('${id}')" onerror="this.src='https://via.placeholder.com/300x300/FF6A00/FFFFFF?text=Produto'">`;
                             }
                         }).join('')}
@@ -619,9 +625,9 @@ function renderizarProdutos() {
                         ${produto.precoAntigo > 0 ? `<span class="product-old-price">De R$ ${produto.precoAntigo.toFixed(2).replace('.', ',')}</span>` : ''}
                     </div>
                     
-                    <!-- CRONÔMETRO EM FUNDO PRETO LOGO ACIMA DO BOTÃO DE COMPRA -->
+                    <!-- CRONÔMETRO FORMATO 00:15:00 EM FUNDO PRETO -->
                     <div class="countdown-box">
-                        <span id="timer-${id}">⏳ Carregando...</span>
+                        <span id="timer-${id}">00:15:00</span>
                     </div>
 
                     <a href="${linkComAfiliado}" target="_blank" rel="noopener" class="buy-btn">🛒 Comprar</a>
