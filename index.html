@@ -48,8 +48,8 @@
         .admin-panel.active { display: block; }
         .admin-panel h3 { color: var(--primary); margin-bottom: 1rem; }
         .form-row { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
-        .form-row input { padding: 0.8rem; border: 2px solid #eee; border-radius: 8px; font-size: 0.95rem; }
-        .form-row input:focus { outline: none; border-color: var(--primary); }
+        .form-row input, .form-row select { padding: 0.8rem; border: 2px solid #eee; border-radius: 8px; font-size: 0.95rem; }
+        .form-row input:focus, .form-row select:focus { outline: none; border-color: var(--primary); }
         .photo-label { font-size: 0.85rem; color: #666; font-weight: 600; margin-top: 0.5rem; }
         
         /* INSTRUÇÕES */
@@ -65,17 +65,21 @@
         
         /* GRID DE PRODUTOS */
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
-        .product-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); transition: transform 0.3s; cursor: pointer; }
+        .product-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); transition: transform 0.3s; }
         .product-card:hover { transform: translateY(-3px); }
         
-        /* CARROSSEL DE FOTOS NO CARD */
-        .photo-carousel { position: relative; width: 100%; height: 160px; overflow: hidden; }
+        /* CRONÔMETRO REGRESSIVO NO CARD */
+        .countdown-box { background: #fff3cd; color: #856404; font-size: 0.75rem; font-weight: bold; text-align: center; padding: 4px; border-bottom: 1px solid #ffeeba; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .countdown-box.expired { background: #f8d7da; color: #721c24; }
+
+        /* CARROSSEL E MÍDIA NO CARD */
+        .photo-carousel { position: relative; width: 100%; height: 160px; overflow: hidden; background: #000; }
         .carousel-images { display: flex; transition: transform 0.3s ease; height: 100%; }
-        .carousel-img { min-width: 100%; height: 100%; object-fit: cover; }
+        .carousel-img, .carousel-video { min-width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
         .carousel-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; }
         .carousel-nav.prev { left: 6px; }
         .carousel-nav.next { right: 6px; }
-        .carousel-dots { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; }
+        .carousel-dots { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; z-index: 2; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); border: none; padding: 0; cursor: pointer; }
         .dot.active { background: white; }
         
@@ -89,6 +93,12 @@
         .admin-buttons { display: flex; gap: 0.3rem; margin-top: 0.5rem; }
         .admin-buttons button { flex: 1; padding: 0.4rem; font-size: 0.8rem; }
         
+        /* MODAL DE ZOOM DA IMAGEM GRANDE */
+        .image-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; }
+        .image-modal.active { display: flex; }
+        .image-modal img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px; }
+        .close-image-modal { position: absolute; top: 20px; right: 25px; background: white; border: none; font-size: 1.5rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+
         .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: white; padding: 0.9rem 1.5rem; border-radius: 8px; z-index: 9999; opacity: 0; transition: all 0.3s; }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         .empty-state { text-align: center; padding: 3rem; color: #999; }
@@ -96,7 +106,7 @@
 </head>
 <body>
 
-<!-- CABEÇALHO (Aparece limpo e direto para todos) -->
+<!-- CABEÇALHO -->
 <header>
     <div class="header-content">
         <h1>🔥 Minhas Ofertas</h1>
@@ -110,17 +120,15 @@
 
 <div class="container">
 
-    <!-- PAINEL DE ADMIN (Só aparece se você estiver logado no Firebase Auth) -->
+    <!-- PAINEL DE ADMIN -->
     <div class="admin-panel" id="adminPanel">
         <h3>➕ Adicionar Nova Oferta (Firebase)</h3>
         
         <div class="steps-box">
             <strong>📱 Passo a passo na Shopee:</strong><br>
-            <strong>1º →</strong> Abra o produto na Shopee<br>
-            <strong>2º →</strong> Segure na imagem → Copiar endereço da imagem<br>
-            <strong>3º →</strong> Cole até <strong>4 fotos</strong> nos campos abaixo<br>
-            <strong>4º →</strong> Compartilhe o produto → Copie o link<br>
-            <strong>5º →</strong> Preencha nome e preço → Salvar! ✅
+            <strong>1º →</strong> Abra o produto na Shopee e copie até 4 fotos<br>
+            <strong>2º →</strong> Cole o link do vídeo (opcional) e o link de afiliado<br>
+            <strong>3º →</strong> Defina o **tempo de expiração** da oferta para gerar urgência! ✅
         </div>
 
         <div class="affiliate-id-box">
@@ -139,6 +147,8 @@
             <input type="text" id="prodImagem3" placeholder="Cole o link da 3ª foto" oninput="mostrarPreview()">
             <span class="photo-label">📷 Foto 4 (opcional):</span>
             <input type="text" id="prodImagem4" placeholder="Cole o link da 4ª foto" oninput="mostrarPreview()">
+            <span class="photo-label">🎥 Link do Vídeo (opcional):</span>
+            <input type="text" id="prodVideo" placeholder="Cole o link do vídeo se houver">
         </div>
         
         <div class="preview-container" id="previewContainer"></div>
@@ -147,6 +157,15 @@
             <input type="text" id="prodLinkShopee" placeholder="🔗 Link de compartilhamento da Shopee">
             <input type="number" id="prodPreco" placeholder="💰 Preço atual R$" step="0.01">
             <input type="number" id="prodPrecoAntigo" placeholder="📐 Preço antigo (de R$) - opcional" step="0.01">
+            
+            <span class="photo-label">⏳ Tempo para expirar a oferta:</span>
+            <select id="prodTempoMinutos">
+                <option value="15">15 Minutos</option>
+                <option value="20" selected>20 Minutos</option>
+                <option value="30">30 Minutos</option>
+                <option value="60">1 Hora</option>
+                <option value="120">2 Horas</option>
+            </select>
         </div>
         
         <button class="btn btn-success" onclick="adicionarProduto()">✅ Salvar Produto no Firebase</button>
@@ -157,7 +176,7 @@
         <div id="listaAdmin"></div>
     </div>
 
-    <!-- LISTA DE PRODUTOS (Visível para todos imediatamente) -->
+    <!-- LISTA DE PRODUTOS -->
     <div id="produtosSection">
         <div class="empty-state" id="emptyState" style="display:none;">
             <h3>🛍️ Nenhuma oferta cadastrada ainda</h3>
@@ -167,7 +186,7 @@
     </div>
 </div>
 
-<!-- JANELINHA (MODAL) DE LOGIN DO ADMIN -->
+<!-- MODAL DE LOGIN -->
 <div class="login-modal" id="loginModal">
     <div class="login-box">
         <button class="close-modal" onclick="fecharModalLogin()">×</button>
@@ -176,6 +195,12 @@
         <input type="password" id="adminPassword" placeholder="Sua senha">
         <button class="btn btn-primary" onclick="fazerLoginFirebase()">Entrar como Admin</button>
     </div>
+</div>
+
+<!-- MODAL PARA VER A FOTO GRANDE (ZOOM) -->
+<div class="image-modal" id="imageModal" onclick="fecharFotoGrande()">
+    <button class="close-image-modal">×</button>
+    <img id="imgGrande" src="" alt="Produto Ampliado">
 </div>
 
 <div class="toast" id="toast"></div>
@@ -192,7 +217,6 @@ const firebaseConfig = {
   measurementId: "G-N09ZYRJ9ZY"
 };
 
-// Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -200,8 +224,9 @@ const db = firebase.firestore();
 let produtos = [];
 let affiliateId = localStorage.getItem('affiliateId') || '';
 let carouselIndices = {};
+let autoPlayTimers = {};
+let countdownInterval = null; // Cronômetro global da tela
 
-// Carrega os produtos assim que a página abre para qualquer visitante
 window.onload = function() {
     if (affiliateId) {
         const campo = document.getElementById('affiliateId');
@@ -210,7 +235,6 @@ window.onload = function() {
     carregarProdutosDoFirebase();
 };
 
-// Monitora se o Admin está logado ou não via Firebase Auth
 auth.onAuthStateChanged((user) => {
     const adminBtn = document.getElementById('adminBtn');
     const btnSair = document.getElementById('btnSair');
@@ -218,14 +242,12 @@ auth.onAuthStateChanged((user) => {
     const adminPanel = document.getElementById('adminPanel');
 
     if (user) {
-        // Usuário logado é o Administrador
         adminBtn.style.display = 'block';
         btnSair.style.display = 'block';
         btnLoginModal.style.display = 'none';
         fecharModalLogin();
         mostrarToast('✅ Conectado como Administrador');
     } else {
-        // Visitante comum (ou deslogado)
         adminBtn.style.display = 'none';
         btnSair.style.display = 'none';
         btnLoginModal.style.display = 'block';
@@ -233,7 +255,6 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// ================= MODAL DE LOGIN =================
 function abrirModalLogin() {
     document.getElementById('loginModal').classList.add('active');
 }
@@ -244,7 +265,6 @@ function fecharModalLogin() {
     document.getElementById('adminPassword').value = '';
 }
 
-// Fazer login usando o Firebase Authentication oficial
 async function fazerLoginFirebase() {
     const email = document.getElementById('adminEmail').value.trim();
     const senha = document.getElementById('adminPassword').value;
@@ -266,11 +286,10 @@ function fazerLogout() {
     auth.signOut().then(() => {
         mostrarToast('👋 Você saiu da conta de admin.');
         document.getElementById('adminPanel').classList.remove('active');
-        renderizarProdutos(); // Atualiza a tela para remover botões de exclusão
+        renderizarProdutos();
     });
 }
 
-// ================= PAINEL ADMIN =================
 function toggleAdminPanel() {
     const panel = document.getElementById('adminPanel');
     panel.classList.toggle('active');
@@ -291,7 +310,6 @@ function construirLinkComAfiliado(linkOriginal) {
     return `${linkOriginal}${separador}afid=${affiliateId}`;
 }
 
-// ================= PRÉ-VISUALIZAÇÃO DE FOTOS =================
 function mostrarPreview() {
     const imagens = [];
     for (let i = 1; i <= 4; i++) {
@@ -312,7 +330,7 @@ function mostrarPreview() {
     });
 }
 
-// ================= FIRESTORE (BANCO DE DADOS) =================
+// ================= FIRESTORE =================
 async function carregarProdutosDoFirebase() {
     try {
         const snapshot = await db.collection('produtos').orderBy('criadoEm', 'desc').get();
@@ -333,8 +351,10 @@ async function adicionarProduto() {
     
     const nome = document.getElementById('prodNome').value.trim();
     const link = document.getElementById('prodLinkShopee').value.trim();
+    const video = document.getElementById('prodVideo').value.trim();
     const preco = parseFloat(document.getElementById('prodPreco').value);
     const precoAntigo = parseFloat(document.getElementById('prodPrecoAntigo').value) || 0;
+    const tempoMinutos = parseInt(document.getElementById('prodTempoMinutos').value) || 20;
 
     const imagens = [];
     for (let i = 1; i <= 4; i++) {
@@ -347,25 +367,30 @@ async function adicionarProduto() {
         return;
     }
 
+    // Tempo de expiração calculado em milissegundos a partir de agora
+    const expiraEm = Date.now() + (tempoMinutos * 60 * 1000);
+
     const novoProduto = {
         nome,
         imagens,
+        video,
         link,
         preco,
         precoAntigo,
+        expiraEm, // Salva o exato momento que a oferta expira
         criadoEm: firebase.firestore.FieldValue.serverTimestamp()
     };
 
     try {
         await db.collection('produtos').add(novoProduto);
-        mostrarToast('✅ Produto salvo no Firebase!');
+        mostrarToast('✅ Produto salvo com cronômetro!');
 
-        // Limpar formulário
         document.getElementById('prodNome').value = '';
         document.getElementById('prodImagem1').value = '';
         document.getElementById('prodImagem2').value = '';
         document.getElementById('prodImagem3').value = '';
         document.getElementById('prodImagem4').value = '';
+        document.getElementById('prodVideo').value = '';
         document.getElementById('prodLinkShopee').value = '';
         document.getElementById('prodPreco').value = '';
         document.getElementById('prodPrecoAntigo').value = '';
@@ -396,34 +421,68 @@ function calcularDesconto(precoAtual, precoAntigo) {
     return Math.round(((precoAntigo - precoAtual) / precoAntigo) * 100);
 }
 
-// ================= CARROSSEL =================
-function nextPhoto(produtoId) {
-    const produto = produtos.find(p => p.id === produtoId);
-    if (!produto) return;
+// ================= CRONÔMETRO REGRESSIVO EM TEMPO REAL =================
+function iniciarRelogiosRegressivos() {
+    if (countdownInterval) clearInterval(countdownInterval);
+
+    countdownInterval = setInterval(() => {
+        const agora = Date.now();
+        produtos.forEach(produto => {
+            if (!produto.expiraEm) return;
+            
+            const diff = produto.expiraEm - agora;
+            const timerElement = document.getElementById(`timer-${produto.id}`);
+            
+            if (!timerElement) return;
+
+            if (diff <= 0) {
+                timerElement.innerHTML = `⚠️ Oferta Expirada!`;
+                timerElement.parentElement.classList.add('expired');
+            } else {
+                const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const segundos = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                const minFormatado = String(minutos).padStart(2, '0');
+                const segFormatado = String(segundos).padStart(2, '0');
+                
+                timerElement.innerHTML = `⏳ Expira em: ${minFormatado}:${segFormatado}`;
+            }
+        });
+    }, 1000);
+}
+
+// ================= CARROSSEL AUTOMÁTICO =================
+function iniciarCarrosselAutomatico(produtoId, totalMidias) {
+    if (totalMidias <= 1) return;
+    autoPlayTimers[produtoId] = setInterval(() => {
+        if (carouselIndices[produtoId] === undefined) carouselIndices[produtoId] = 0;
+        carouselIndices[produtoId] = (carouselIndices[produtoId] + 1) % totalMidias;
+        atualizarCarrossel(produtoId);
+    }, 3500);
+}
+
+function nextPhoto(produtoId, total) {
+    clearInterval(autoPlayTimers[produtoId]);
     if (carouselIndices[produtoId] === undefined) carouselIndices[produtoId] = 0;
-    carouselIndices[produtoId] = (carouselIndices[produtoId] + 1) % produto.imagens.length;
+    carouselIndices[produtoId] = (carouselIndices[produtoId] + 1) % total;
     atualizarCarrossel(produtoId);
 }
 
-function prevPhoto(produtoId) {
-    const produto = produtos.find(p => p.id === produtoId);
-    if (!produto) return;
+function prevPhoto(produtoId, total) {
+    clearInterval(autoPlayTimers[produtoId]);
     if (carouselIndices[produtoId] === undefined) carouselIndices[produtoId] = 0;
-    carouselIndices[produtoId] = (carouselIndices[produtoId] - 1 + produto.imagens.length) % produto.imagens.length;
+    carouselIndices[produtoId] = (carouselIndices[produtoId] - 1 + total) % total;
     atualizarCarrossel(produtoId);
 }
 
 function goToPhoto(produtoId, index) {
+    clearInterval(autoPlayTimers[produtoId]);
     carouselIndices[produtoId] = index;
     atualizarCarrossel(produtoId);
 }
 
 function atualizarCarrossel(produtoId) {
-    const produto = produtos.find(p => p.id === produtoId);
-    if (!produto) return;
-    if (carouselIndices[produtoId] === undefined) carouselIndices[produtoId] = 0;
-    const idx = carouselIndices[produtoId];
-    
+    const idx = carouselIndices[produtoId] || 0;
     const container = document.getElementById(`carousel-${produtoId}`);
     if (container) container.style.transform = `translateX(-${idx * 100}%)`;
     
@@ -435,12 +494,26 @@ function atualizarCarrossel(produtoId) {
     }
 }
 
+function abrirFotoGrande(urlImg) {
+    const modal = document.getElementById('imageModal');
+    const imgGrande = document.getElementById('imgGrande');
+    imgGrande.src = urlImg;
+    modal.classList.add('active');
+}
+
+function fecharFotoGrande() {
+    document.getElementById('imageModal').classList.remove('active');
+}
+
 // ================= RENDERIZAÇÃO =================
 function renderizarProdutos() {
     const grid = document.getElementById('produtosGrid');
     const emptyState = document.getElementById('emptyState');
     const isAdmin = auth.currentUser !== null;
     
+    Object.values(autoPlayTimers).forEach(timer => clearInterval(timer));
+    autoPlayTimers = {};
+
     if (produtos.length === 0) {
         emptyState.style.display = 'block';
         grid.innerHTML = '';
@@ -452,23 +525,39 @@ function renderizarProdutos() {
         const desconto = calcularDesconto(produto.preco, produto.precoAntigo);
         const linkComAfiliado = construirLinkComAfiliado(produto.link);
         const id = produto.id;
-        const temVariasFotos = produto.imagens && produto.imagens.length > 1;
         
+        let midias = produto.imagens ? [...produto.imagens] : [];
+        if (produto.video) midias.push(produto.video);
+        
+        const totalMidias = midias.length;
+        const temVarias = totalMidias > 1;
+
+        setTimeout(() => iniciarCarrosselAutomatico(id, totalMidias), 100);
+
         return `
             <div class="product-card">
+                <!-- CRONÔMETRO REGRESSIVO -->
+                <div class="countdown-box">
+                    <span id="timer-${id}">⏳ Carregando tempo...</span>
+                </div>
+
                 <div class="photo-carousel">
                     <div class="carousel-images" id="carousel-${id}">
-                        ${produto.imagens ? produto.imagens.map(img => 
-                            `<img src="${img}" alt="${produto.nome}" class="carousel-img" loading="lazy" 
-                             onerror="this.src='https://via.placeholder.com/300x300/FF6A00/FFFFFF?text=Produto'">`
-                        ).join('') : ''}
+                        ${midias.map((midia) => {
+                            const ehVideo = midia.includes('mp4') || midia.includes('webm') || midia.includes('youtube') || midia.includes('youtu.be');
+                            if (ehVideo) {
+                                return `<video src="${midia}" class="carousel-video" controls muted></video>`;
+                            } else {
+                                return `<img src="${midia}" alt="${produto.nome}" class="carousel-img" loading="lazy" onclick="abrirFotoGrande('${midia}')" onerror="this.src='https://via.placeholder.com/300x300/FF6A00/FFFFFF?text=Produto'">`;
+                            }
+                        }).join('')}
                     </div>
                     
-                    ${temVariasFotos ? `
-                        <button class="carousel-nav prev" onclick="prevPhoto('${id}')">‹</button>
-                        <button class="carousel-nav next" onclick="nextPhoto('${id}')">›</button>
+                    ${temVarias ? `
+                        <button class="carousel-nav prev" onclick="prevPhoto('${id}', ${totalMidias})">‹</button>
+                        <button class="carousel-nav next" onclick="nextPhoto('${id}', ${totalMidias})">›</button>
                         <div class="carousel-dots" id="dots-${id}">
-                            ${produto.imagens.map((_, i) => 
+                            ${midias.map((_, i) => 
                                 `<button class="dot ${i === 0 ? 'active' : ''}" onclick="goToPhoto('${id}', ${i})"></button>`
                             ).join('')}
                         </div>
@@ -492,6 +581,9 @@ function renderizarProdutos() {
             </div>
         `;
     }).join('');
+
+    // Inicia a contagem regressiva para todos os cards renderizados
+    iniciarRelogiosRegressivos();
 }
 
 function atualizarListaAdmin() {
