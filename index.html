@@ -171,10 +171,10 @@
                 🛒 <span id="cartCountBadge" class="cart-badge">0</span>
             </button>
             
-            <!-- BOTÃO "ENTRAR" (ABRE MODAL DE LOGIN/CADASTRO) -->
+            <!-- BOTÃO "ENTRAR" -->
             <button class="btn btn-secondary" id="btnLoginModal" style="font-size:0.9rem; padding:0.4rem 0.8rem; background:white; color:var(--primary);" onclick="abrirModalAuth()">🔑 Entrar</button>
             
-            <!-- BOTÕES DE ADMIN (SÓ APARECEM PARA O SEU E-MAIL) -->
+            <!-- BOTÕES DE ADMIN (SÓ APARECEM SE O FIREBASE VALIDAR QUE É ADMIN) -->
             <button class="btn btn-secondary" id="adminBtn" style="display:none; font-size:0.9rem; padding:0.4rem 0.8rem;" onclick="toggleAdminPanel()">⚙️ Admin</button>
             <button class="btn btn-danger" id="btnSair" style="display:none; font-size:0.9rem; padding:0.4rem 0.8rem;" onclick="fazerLogout()">Sair</button>
         </div>
@@ -183,7 +183,7 @@
 
 <div class="container">
 
-    <!-- PAINEL DE ADMIN (EXCLUSIVO PARA O DONO) -->
+    <!-- PAINEL DE ADMIN -->
     <div class="admin-panel" id="adminPanel">
         <h3>➕ Adicionar Nova Oferta (Firebase)</h3>
         
@@ -249,7 +249,7 @@
     </div>
 </div>
 
-<!-- MODAL UNIFICADO DE AUTENTICAÇÃO (ENTRAR OU CRIAR CONTA) -->
+<!-- MODAL UNIFICADO DE AUTENTICAÇÃO -->
 <div class="modal" id="authModal">
     <div class="modal-box">
         <button class="close-modal" onclick="fecharModalAuth()">×</button>
@@ -259,14 +259,12 @@
             <button class="auth-tab" id="tabRegister" onclick="alternarAbaAuth('register')">Criar Conta</button>
         </div>
 
-        <!-- FORMULÁRIO DE LOGIN -->
         <div id="formLogin">
             <input type="email" id="authEmailLogin" placeholder="Seu e-mail">
             <input type="password" id="authSenhaLogin" placeholder="Sua senha">
             <button class="btn btn-primary" onclick="fazerLogin()">Acessar Conta</button>
         </div>
 
-        <!-- FORMULÁRIO DE CADASTRO -->
         <div id="formRegister" style="display: none;">
             <input type="text" id="authNomeRegister" placeholder="Seu nome completo">
             <input type="email" id="authEmailRegister" placeholder="Seu e-mail">
@@ -360,6 +358,7 @@ const db = firebase.firestore();
 let produtos = [];
 let carrinho = JSON.parse(localStorage.getItem('meuCarrinhoLocal')) || [];
 let affiliateId = localStorage.getItem('affiliateId') || '';
+let usuarioAdmin = false; // Variável dinâmica controlada pelo banco de dados
 let carouselIndices = {};
 let autoPlayTimers = {};
 let countdownInterval = null;
@@ -367,9 +366,6 @@ let temposProdutos = {};
 
 let modalImagensAtuais = [];
 let modalIndiceAtual = 0;
-
-// ================= E-MAIL DO ADMINISTRADOR (SOMENTE VOCÊ) =================
-const EMAIL_ADMIN = "giliardmartins1987@gmail.com"; // Substitua caso seu e-mail de admin no Firebase seja outro
 
 window.onload = function() {
     if (affiliateId) {
@@ -380,7 +376,7 @@ window.onload = function() {
     atualizarBadgeCarrinho();
 };
 
-// CONTROLE DE SESSÃO E VERIFICAÇÃO DE ADMIN POR E-MAIL
+// CONTROLE DE SESSÃO E VERIFICAÇÃO DE ADMIN DIRETO NO FIRESTORE
 auth.onAuthStateChanged(async (user) => {
     const adminBtn = document.getElementById('adminBtn');
     const btnSair = document.getElementById('btnSair');
@@ -391,17 +387,26 @@ auth.onAuthStateChanged(async (user) => {
         btnLoginModal.style.display = 'none';
         fecharModalAuth();
 
-        // TRAVA DE SEGURANÇA: O painel admin só aparece se o e-mail for exatamente o seu!
-        if (user.email === EMAIL_ADMIN) {
-            adminBtn.style.display = 'block';
-        } else {
-            adminBtn.style.display = 'none';
-            document.getElementById('adminPanel').classList.remove('active');
+        // BUSCA NO BANCO DE DADOS DO FIREBASE SE ESTE USUÁRIO É ADMIN
+        try {
+            const userDoc = await db.collection('usuarios').doc(user.uid).get();
+            if (userDoc.exists && userDoc.data().admin === true) {
+                usuarioAdmin = true;
+                adminBtn.style.display = 'block';
+            } else {
+                usuarioAdmin = false;
+                adminBtn.style.display = 'none';
+                document.getElementById('adminPanel').classList.remove('active');
+            }
+        } catch (e) {
+            console.error("Erro ao verificar permissão de admin:", e);
+            usuarioAdmin = false;
         }
 
         carregarCarrinhoDoFirebase(user.uid);
         renderizarProdutos();
     } else {
+        usuarioAdmin = false;
         adminBtn.style.display = 'none';
         btnSair.style.display = 'none';
         btnLoginModal.style.display = 'block';
@@ -410,7 +415,7 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
-// ================= SISTEMA DE AUTENTICAÇÃO (LOGIN E CADASTRO) =================
+// ================= SISTEMA DE AUTENTICAÇÃO =================
 function abrirModalAuth() {
     document.getElementById('authModal').classList.add('active');
 }
@@ -475,9 +480,11 @@ async function fazerCadastro() {
         const res = await auth.createUserWithEmailAndPassword(email, senha);
         await res.user.updateProfile({ displayName: nome });
         
+        // Novos usuários criados aqui entram como clientes comuns (admin: false)
         await db.collection('usuarios').doc(res.user.uid).set({
             nome,
             email,
+            admin: false,
             criadoEm: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -491,6 +498,7 @@ async function fazerCadastro() {
 function fazerLogout() {
     auth.signOut().then(() => {
         mostrarToast('👋 Você saiu da sua conta.');
+        usuarioAdmin = false;
         carrinho = [];
         localStorage.removeItem('meuCarrinhoLocal');
         atualizarBadgeCarrinho();
@@ -538,7 +546,7 @@ function mostrarPreview() {
     });
 }
 
-// ================= FIRESTORE E GERENCIAMENTO DE PRODUTOS =================
+// ================= FIRESTORE E PRODUTOS =================
 async function carregarProdutosDoFirebase() {
     try {
         const snapshot = await db.collection('produtos').orderBy('criadoEm', 'desc').get();
@@ -557,7 +565,7 @@ async function carregarProdutosDoFirebase() {
         });
 
         renderizarProdutos();
-        if (auth.currentUser && auth.currentUser.email === EMAIL_ADMIN) atualizarListaAdmin();
+        if (usuarioAdmin) atualizarListaAdmin();
     } catch (error) {
         console.error("Erro ao carregar do Firebase: ", error);
         mostrarToast('❌ Erro ao carregar ofertas.');
@@ -565,7 +573,7 @@ async function carregarProdutosDoFirebase() {
 }
 
 async function adicionarProduto() {
-    if (!auth.currentUser || auth.currentUser.email !== EMAIL_ADMIN) return;
+    if (!usuarioAdmin) return;
     
     const nome = document.getElementById('prodNome').value.trim();
     const link = document.getElementById('prodLinkShopee').value.trim();
@@ -619,7 +627,7 @@ async function adicionarProduto() {
 }
 
 async function excluirProduto(id) {
-    if (!auth.currentUser || auth.currentUser.email !== EMAIL_ADMIN) return;
+    if (!usuarioAdmin) return;
     if (!confirm('Tem certeza que deseja excluir este produto do Firebase?')) return;
     try {
         await db.collection('produtos').doc(id).delete();
@@ -636,7 +644,7 @@ function calcularDesconto(precoAtual, precoAntigo) {
     return Math.round(((precoAntigo - precoAtual) / precoAntigo) * 100);
 }
 
-// ================= SISTEMA DE CARRINHO DE COMPRAS =================
+// ================= CARRINHO =================
 function adicionarAoCarrinho(produtoId) {
     const produto = produtos.find(p => p.id === produtoId);
     if (!produto) return;
@@ -728,7 +736,7 @@ function renderizarCarrinhoModal() {
     totalBox.style.display = 'flex';
 }
 
-// ================= CRONÔMETRO INTELIGENTE =================
+// ================= CRONÔMETRO =================
 function iniciarRelogiosRegressivos() {
     if (countdownInterval) clearInterval(countdownInterval);
 
@@ -774,7 +782,7 @@ function iniciarRelogiosRegressivos() {
     }, 1000);
 }
 
-// ================= CARROSSEL AUTOMÁTICO =================
+// ================= CARROSSEL =================
 function iniciarCarrosselAutomatico(produtoId, totalMidias) {
     if (totalMidias <= 1) return;
     autoPlayTimers[produtoId] = setInterval(() => {
@@ -817,7 +825,7 @@ function atualizarCarrossel(produtoId) {
     }
 }
 
-// ================= ZOOM COM CARROSSEL REAL =================
+// ================= ZOOM =================
 function abrirZoomProduto(produtoId) {
     const produto = produtos.find(p => p.id === produtoId);
     if (!produto || !produto.imagens || produto.imagens.length === 0) return;
@@ -859,11 +867,10 @@ function fecharFotoGrande() {
     document.getElementById('imageModal').classList.remove('active');
 }
 
-// ================= RENDERIZAÇÃO DE PRODUTOS =================
+// ================= RENDERIZAÇÃO =================
 function renderizarProdutos() {
     const grid = document.getElementById('produtosGrid');
     const emptyState = document.getElementById('emptyState');
-    const isAdmin = auth.currentUser && auth.currentUser.email === EMAIL_ADMIN;
     
     Object.values(autoPlayTimers).forEach(timer => clearInterval(timer));
     autoPlayTimers = {};
@@ -890,10 +897,8 @@ function renderizarProdutos() {
 
         return `
             <div class="product-card">
-                <!-- BOTAO SOBREPOSTO PARA SALVAR NO CARRINHO -->
                 <button class="add-cart-btn-overlay" onclick="adicionarAoCarrinho('${id}')" title="Salvar no Carrinho">🛒</button>
 
-                <!-- CARROSSEL DE FOTOS -->
                 <div class="photo-carousel">
                     <div class="carousel-images" id="carousel-${id}">
                         ${midias.map((midia) => {
@@ -925,13 +930,12 @@ function renderizarProdutos() {
                         ${produto.precoAntigo > 0 ? `<span class="product-old-price">De R$ ${produto.precoAntigo.toFixed(2).replace('.', ',')}</span>` : ''}
                     </div>
                     
-                    <!-- CRONÔMETRO INTELIGENTE EM FUNDO PRETO -->
                     <div class="countdown-box">
                         <span id="timer-${id}">00:15:00</span>
                     </div>
 
                     <a href="${linkComAfiliado}" target="_blank" rel="noopener" class="buy-btn">🛒 Comprar</a>
-                    ${isAdmin ? `
+                    ${usuarioAdmin ? `
                         <div class="admin-buttons">
                             <button class="btn btn-danger" onclick="excluirProduto('${id}')">🗑️ Excluir</button>
                         </div>
@@ -966,6 +970,7 @@ function atualizarListaAdmin() {
 function mostrarToast(mensagem) {
     const toast = document.getElementById('toast');
     toast.textContent = mensagem;
+    toast.classList.0 = ''; // limpa bug de classe
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
