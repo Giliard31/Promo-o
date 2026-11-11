@@ -171,8 +171,10 @@
                 🛒 <span id="cartCountBadge" class="cart-badge">0</span>
             </button>
             
-            <!-- BOTÃO UNIFICADO "ENTRAR" -->
+            <!-- BOTÃO "ENTRAR" (ABRE MODAL DE LOGIN/CADASTRO) -->
             <button class="btn btn-secondary" id="btnLoginModal" style="font-size:0.9rem; padding:0.4rem 0.8rem; background:white; color:var(--primary);" onclick="abrirModalAuth()">🔑 Entrar</button>
+            
+            <!-- BOTÕES DE ADMIN (SÓ APARECEM PARA O SEU E-MAIL) -->
             <button class="btn btn-secondary" id="adminBtn" style="display:none; font-size:0.9rem; padding:0.4rem 0.8rem;" onclick="toggleAdminPanel()">⚙️ Admin</button>
             <button class="btn btn-danger" id="btnSair" style="display:none; font-size:0.9rem; padding:0.4rem 0.8rem;" onclick="fazerLogout()">Sair</button>
         </div>
@@ -181,7 +183,7 @@
 
 <div class="container">
 
-    <!-- PAINEL DE ADMIN (VISÍVEL APENAS QUANDO LOGADO COM EMAIL ADMIN) -->
+    <!-- PAINEL DE ADMIN (EXCLUSIVO PARA O DONO) -->
     <div class="admin-panel" id="adminPanel">
         <h3>➕ Adicionar Nova Oferta (Firebase)</h3>
         
@@ -366,6 +368,9 @@ let temposProdutos = {};
 let modalImagensAtuais = [];
 let modalIndiceAtual = 0;
 
+// ================= E-MAIL DO ADMINISTRADOR (SOMENTE VOCÊ) =================
+const EMAIL_ADMIN = "giliardmartins1987@gmail.com"; // Substitua caso seu e-mail de admin no Firebase seja outro
+
 window.onload = function() {
     if (affiliateId) {
         const campo = document.getElementById('affiliateId');
@@ -375,7 +380,7 @@ window.onload = function() {
     atualizarBadgeCarrinho();
 };
 
-// CONTROLE DE SESSÃO DO USUÁRIO
+// CONTROLE DE SESSÃO E VERIFICAÇÃO DE ADMIN POR E-MAIL
 auth.onAuthStateChanged(async (user) => {
     const adminBtn = document.getElementById('adminBtn');
     const btnSair = document.getElementById('btnSair');
@@ -386,16 +391,22 @@ auth.onAuthStateChanged(async (user) => {
         btnLoginModal.style.display = 'none';
         fecharModalAuth();
 
-        // Se for o e-mail cadastrado como admin, exibe o painel de gerenciamento
-        adminBtn.style.display = 'block';
+        // TRAVA DE SEGURANÇA: O painel admin só aparece se o e-mail for exatamente o seu!
+        if (user.email === EMAIL_ADMIN) {
+            adminBtn.style.display = 'block';
+        } else {
+            adminBtn.style.display = 'none';
+            document.getElementById('adminPanel').classList.remove('active');
+        }
 
-        // Carrega o carrinho salvo no Firebase da conta do usuário
         carregarCarrinhoDoFirebase(user.uid);
+        renderizarProdutos();
     } else {
         adminBtn.style.display = 'none';
         btnSair.style.display = 'none';
         btnLoginModal.style.display = 'block';
         document.getElementById('adminPanel').classList.remove('active');
+        renderizarProdutos();
     }
 });
 
@@ -464,7 +475,6 @@ async function fazerCadastro() {
         const res = await auth.createUserWithEmailAndPassword(email, senha);
         await res.user.updateProfile({ displayName: nome });
         
-        // Cria registro do usuário no Firestore
         await db.collection('usuarios').doc(res.user.uid).set({
             nome,
             email,
@@ -547,7 +557,7 @@ async function carregarProdutosDoFirebase() {
         });
 
         renderizarProdutos();
-        if (auth.currentUser) atualizarListaAdmin();
+        if (auth.currentUser && auth.currentUser.email === EMAIL_ADMIN) atualizarListaAdmin();
     } catch (error) {
         console.error("Erro ao carregar do Firebase: ", error);
         mostrarToast('❌ Erro ao carregar ofertas.');
@@ -555,7 +565,7 @@ async function carregarProdutosDoFirebase() {
 }
 
 async function adicionarProduto() {
-    if (!auth.currentUser) return;
+    if (!auth.currentUser || auth.currentUser.email !== EMAIL_ADMIN) return;
     
     const nome = document.getElementById('prodNome').value.trim();
     const link = document.getElementById('prodLinkShopee').value.trim();
@@ -609,7 +619,7 @@ async function adicionarProduto() {
 }
 
 async function excluirProduto(id) {
-    if (!auth.currentUser) return;
+    if (!auth.currentUser || auth.currentUser.email !== EMAIL_ADMIN) return;
     if (!confirm('Tem certeza que deseja excluir este produto do Firebase?')) return;
     try {
         await db.collection('produtos').doc(id).delete();
@@ -647,7 +657,6 @@ function salvarCarrinho() {
     localStorage.setItem('meuCarrinhoLocal', JSON.stringify(carrinho));
     atualizarBadgeCarrinho();
 
-    // Se estiver logado, sincroniza com o banco de dados Firebase
     if (auth.currentUser) {
         db.collection('carrinhos').doc(auth.currentUser.uid).set({
             itens: carrinho,
@@ -854,7 +863,7 @@ function fecharFotoGrande() {
 function renderizarProdutos() {
     const grid = document.getElementById('produtosGrid');
     const emptyState = document.getElementById('emptyState');
-    const isAdmin = auth.currentUser !== null;
+    const isAdmin = auth.currentUser && auth.currentUser.email === EMAIL_ADMIN;
     
     Object.values(autoPlayTimers).forEach(timer => clearInterval(timer));
     autoPlayTimers = {};
