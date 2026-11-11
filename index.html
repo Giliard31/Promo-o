@@ -53,7 +53,10 @@
         /* CABEÇALHO */
         header { background: var(--primary); color: white; padding: 0.9rem 1rem; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
         .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-        .header-content h1 { font-size: 1.35rem; font-weight: bold; }
+        .header-title-area { display: flex; flex-direction: column; }
+        .header-content h1 { font-size: 1.25rem; font-weight: bold; }
+        .user-welcome { font-size: 0.85rem; color: #ffe5d0; margin-top: 2px; }
+        
         .header-buttons { display: flex; gap: 0.5rem; align-items: center; }
         
         /* ÍCONE DO CARRINHO NO TOPO */
@@ -164,7 +167,10 @@
 <!-- CABEÇALHO -->
 <header>
     <div class="header-content">
-        <h1>🔥 Minhas Ofertas</h1>
+        <div class="header-title-area">
+            <h1>🔥 Minhas Ofertas</h1>
+            <div id="userWelcome" class="user-welcome" style="display: none;"></div>
+        </div>
         <div class="header-buttons">
             <!-- BOTAO CARRINHO -->
             <button class="cart-icon-btn" onclick="abrirModalCarrinho()">
@@ -304,7 +310,15 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ================= CONFIGURAÇÃO DO PWA =================
+// ================= CORREÇÃO DE CACHE DO PWA (EVITA TELA TRAVADA NO LOGO) =================
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+            registration.unregister(); // Limpa Service Workers antigos que travavam o app
+        }
+    });
+}
+
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -332,14 +346,6 @@ function fecharBannerInstalacao() {
     document.getElementById('installBanner').classList.remove('active');
 }
 
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-        .then(() => console.log('Service Worker registrado com sucesso!'))
-        .catch((err) => console.log('Erro ao registrar Service Worker:', err));
-    });
-}
-
 // ================= CONFIGURAÇÃO DO FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyApV8icirJpVWQ3FOqsf6MAlB3IbmLvRvM",
@@ -354,13 +360,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-
-// Habilita persistência offline para evitar perda de dados se o sinal oscilar
-db.enablePersistence().catch((err) => {
-    if (err.code == 'unimplemented') {
-        console.log('O navegador não suporta persistência offline.');
-    }
-});
 
 let produtos = [];
 let carrinho = JSON.parse(localStorage.getItem('meuCarrinhoLocal')) || [];
@@ -383,16 +382,28 @@ window.onload = function() {
     atualizarBadgeCarrinho();
 };
 
-// CONTROLE DE SESSÃO COM PROTEÇÃO DE ERRO DE CONEXÃO
+// CONTROLE DE SESSÃO E EXIBIÇÃO DO PRIMEIRO NOME ("Olá, [Nome]")
 auth.onAuthStateChanged(async (user) => {
     const adminBtn = document.getElementById('adminBtn');
     const btnSair = document.getElementById('btnSair');
     const btnLoginModal = document.getElementById('btnLoginModal');
+    const userWelcome = document.getElementById('userWelcome');
 
     if (user) {
         btnSair.style.display = 'block';
         btnLoginModal.style.display = 'none';
         fecharModalAuth();
+
+        // Extrai o primeiro nome do usuário logado
+        let primeiroNome = "Visitante";
+        if (user.displayName) {
+            primeiroNome = user.displayName.split(' ')[0];
+        } else if (user.email) {
+            primeiroNome = user.email.split('@')[0];
+        }
+
+        userWelcome.textContent = `Olá, ${primeiroNome}!`;
+        userWelcome.style.display = 'block';
 
         try {
             const userDoc = await db.collection('usuarios').doc(user.uid).get();
@@ -416,6 +427,7 @@ auth.onAuthStateChanged(async (user) => {
         adminBtn.style.display = 'none';
         btnSair.style.display = 'none';
         btnLoginModal.style.display = 'block';
+        userWelcome.style.display = 'none';
         document.getElementById('adminPanel').classList.remove('active');
         renderizarProdutos();
     }
@@ -551,7 +563,7 @@ function mostrarPreview() {
     });
 }
 
-// ================= FIRESTORE E PRODUTOS (COM TRATAMENTO DE QUEDA) =================
+// ================= FIRESTORE E PRODUTOS =================
 async function carregarProdutosDoFirebase() {
     try {
         const snapshot = await db.collection('produtos').orderBy('criadoEm', 'desc').get();
@@ -573,7 +585,7 @@ async function carregarProdutosDoFirebase() {
         if (usuarioAdmin) atualizarListaAdmin();
     } catch (error) {
         console.error("Erro ao carregar do Firebase: ", error);
-        mostrarToast('⚠️ Conexão instável. Tentando modo offline...');
+        mostrarToast('❌ Erro ao carregar ofertas.');
     }
 }
 
@@ -627,7 +639,7 @@ async function adicionarProduto() {
         carregarProdutosDoFirebase();
     } catch (error) {
         console.error("Erro ao salvar: ", error);
-        mostrarToast('❌ Falha ao salvar. Verifique sua conexão.');
+        mostrarToast('❌ Erro ao salvar produto.');
     }
 }
 
@@ -640,7 +652,7 @@ async function excluirProduto(id) {
         carregarProdutosDoFirebase();
     } catch (error) {
         console.error("Erro ao excluir: ", error);
-        mostrarToast('❌ Erro ao excluir produto.');
+        mostrarToast('❌ Erro ao excluir.');
     }
 }
 
@@ -674,7 +686,7 @@ function salvarCarrinho() {
         db.collection('carrinhos').doc(auth.currentUser.uid).set({
             itens: carrinho,
             atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(err => console.log('Carrinho salvo localmente (offline).'));
+        });
     }
 }
 
@@ -960,14 +972,14 @@ function atualizarListaAdmin() {
         return;
     }
     
-    lista.innerHTML = produtos.append ? '' : produtos.map((produto, index) => `
+    lista.innerHTML = produtos.map((produto, index) => `
         <div style="padding:0.7rem; background:#f9f9f9; border-radius:6px; margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
             <div style="font-size:0.9rem; flex:1; min-width:180px;">
                 <strong>${index + 1}.</strong> ${produto.nome ? produto.nome.substring(0, 30) : ''}...<br>
-                <span style="color:var(--primary); font-weight:bold;">R$ ${produto.preco ? produto.preco.toFixed(2).replace('.', ',') : '0,00'}</span>
+                <span style="color:var(--primary); font-weight:bold;">R$ ${produto.preco ? produto.preco.toFixed(2).replace('.', ',')}</span>
                 <span style="color:#666; font-size:0.8rem; margin-left:0.5rem;">📷 ${produto.imagens ? produto.imagens.length : 0} foto(s)</span>
             </div>
-            <button class="btn btn-danger" style="padding:0.4rem 0.6rem; font-size:0.8rem;" onclick="excluirProduto('${produto.id}')">🗑️ Excluir</button>
+            <button class="btn btn-danger" style="padding:0.4rem 0.6rem; font-size:0.8rem;" onclick="excluirProduto('${produto.id}')">🗑️ Excluir</i></button>
         </div>
     `).join('');
 }
