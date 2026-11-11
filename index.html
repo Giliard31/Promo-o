@@ -174,7 +174,7 @@
             <!-- BOTÃO "ENTRAR" -->
             <button class="btn btn-secondary" id="btnLoginModal" style="font-size:0.9rem; padding:0.4rem 0.8rem; background:white; color:var(--primary);" onclick="abrirModalAuth()">🔑 Entrar</button>
             
-            <!-- BOTÕES DE ADMIN (SÓ APARECEM SE O FIREBASE VALIDAR QUE É ADMIN) -->
+            <!-- BOTÕES DE ADMIN -->
             <button class="btn btn-secondary" id="adminBtn" style="display:none; font-size:0.9rem; padding:0.4rem 0.8rem;" onclick="toggleAdminPanel()">⚙️ Admin</button>
             <button class="btn btn-danger" id="btnSair" style="display:none; font-size:0.9rem; padding:0.4rem 0.8rem;" onclick="fazerLogout()">Sair</button>
         </div>
@@ -355,10 +355,17 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// Habilita persistência offline para evitar perda de dados se o sinal oscilar
+db.enablePersistence().catch((err) => {
+    if (err.code == 'unimplemented') {
+        console.log('O navegador não suporta persistência offline.');
+    }
+});
+
 let produtos = [];
 let carrinho = JSON.parse(localStorage.getItem('meuCarrinhoLocal')) || [];
 let affiliateId = localStorage.getItem('affiliateId') || '';
-let usuarioAdmin = false; // Variável dinâmica controlada pelo banco de dados
+let usuarioAdmin = false;
 let carouselIndices = {};
 let autoPlayTimers = {};
 let countdownInterval = null;
@@ -376,7 +383,7 @@ window.onload = function() {
     atualizarBadgeCarrinho();
 };
 
-// CONTROLE DE SESSÃO E VERIFICAÇÃO DE ADMIN DIRETO NO FIRESTORE
+// CONTROLE DE SESSÃO COM PROTEÇÃO DE ERRO DE CONEXÃO
 auth.onAuthStateChanged(async (user) => {
     const adminBtn = document.getElementById('adminBtn');
     const btnSair = document.getElementById('btnSair');
@@ -387,7 +394,6 @@ auth.onAuthStateChanged(async (user) => {
         btnLoginModal.style.display = 'none';
         fecharModalAuth();
 
-        // BUSCA NO BANCO DE DADOS DO FIREBASE SE ESTE USUÁRIO É ADMIN
         try {
             const userDoc = await db.collection('usuarios').doc(user.uid).get();
             if (userDoc.exists && userDoc.data().admin === true) {
@@ -480,7 +486,6 @@ async function fazerCadastro() {
         const res = await auth.createUserWithEmailAndPassword(email, senha);
         await res.user.updateProfile({ displayName: nome });
         
-        // Novos usuários criados aqui entram como clientes comuns (admin: false)
         await db.collection('usuarios').doc(res.user.uid).set({
             nome,
             email,
@@ -546,7 +551,7 @@ function mostrarPreview() {
     });
 }
 
-// ================= FIRESTORE E PRODUTOS =================
+// ================= FIRESTORE E PRODUTOS (COM TRATAMENTO DE QUEDA) =================
 async function carregarProdutosDoFirebase() {
     try {
         const snapshot = await db.collection('produtos').orderBy('criadoEm', 'desc').get();
@@ -568,7 +573,7 @@ async function carregarProdutosDoFirebase() {
         if (usuarioAdmin) atualizarListaAdmin();
     } catch (error) {
         console.error("Erro ao carregar do Firebase: ", error);
-        mostrarToast('❌ Erro ao carregar ofertas.');
+        mostrarToast('⚠️ Conexão instável. Tentando modo offline...');
     }
 }
 
@@ -622,7 +627,7 @@ async function adicionarProduto() {
         carregarProdutosDoFirebase();
     } catch (error) {
         console.error("Erro ao salvar: ", error);
-        mostrarToast('❌ Erro ao salvar produto.');
+        mostrarToast('❌ Falha ao salvar. Verifique sua conexão.');
     }
 }
 
@@ -635,7 +640,7 @@ async function excluirProduto(id) {
         carregarProdutosDoFirebase();
     } catch (error) {
         console.error("Erro ao excluir: ", error);
-        mostrarToast('❌ Erro ao excluir.');
+        mostrarToast('❌ Erro ao excluir produto.');
     }
 }
 
@@ -669,7 +674,7 @@ function salvarCarrinho() {
         db.collection('carrinhos').doc(auth.currentUser.uid).set({
             itens: carrinho,
             atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        }).catch(err => console.log('Carrinho salvo localmente (offline).'));
     }
 }
 
@@ -955,7 +960,7 @@ function atualizarListaAdmin() {
         return;
     }
     
-    lista.innerHTML = produtos.map((produto, index) => `
+    lista.innerHTML = produtos.append ? '' : produtos.map((produto, index) => `
         <div style="padding:0.7rem; background:#f9f9f9; border-radius:6px; margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
             <div style="font-size:0.9rem; flex:1; min-width:180px;">
                 <strong>${index + 1}.</strong> ${produto.nome ? produto.nome.substring(0, 30) : ''}...<br>
@@ -970,9 +975,8 @@ function atualizarListaAdmin() {
 function mostrarToast(mensagem) {
     const toast = document.getElementById('toast');
     toast.textContent = mensagem;
-    toast.classList.0 = ''; // limpa bug de classe
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
+    toast.className = 'toast show';
+    setTimeout(() => toast.className = 'toast', 3000);
 }
 </script>
 
