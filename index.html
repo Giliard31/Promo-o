@@ -93,7 +93,6 @@
         
         /* CRONÔMETRO EM FUNDO PRETO */
         .countdown-box { background: #111; color: #ffaa00; font-size: 0.95rem; font-weight: bold; text-align: center; padding: 6px 4px; border-radius: 4px; margin-bottom: 0.5rem; letter-spacing: 1px; }
-        .countdown-box.expired { background: #ff4444; color: white; }
 
         .buy-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 0.65rem 0.2rem; border-radius: 6px; font-weight: bold; margin-top: auto; cursor: pointer; font-size: 0.98rem; text-decoration: none; display: block; text-align: center; }
         .buy-btn:hover { background: #e65c00; }
@@ -244,6 +243,9 @@ let carouselIndices = {};
 let autoPlayTimers = {};
 let countdownInterval = null;
 
+// Objeto para rastrear os estados dos temporizadores de cada produto na tela
+let temposProdutos = {};
+
 // Variáveis para o Zoom
 let modalImagensAtuais = [];
 let modalIndiceAtual = 0;
@@ -356,18 +358,20 @@ async function carregarProdutosDoFirebase() {
     try {
         const snapshot = await db.collection('produtos').orderBy('criadoEm', 'desc').get();
         produtos = [];
+        temposProdutos = {}; // Reinicia o controle de tempo
+
         snapshot.forEach(doc => {
             const data = doc.data();
-            
-            // Garante o cálculo do tempo inicial caso o produto antigo não tenha o expiraEm
-            let expiraEm = data.expiraEm;
-            if (!expiraEm) {
-                const criado = data.criadoEm ? data.criadoEm.toMillis() : Date.now();
-                expiraEm = criado + (15 * 60 * 1000);
-            }
+            produtos.push({ id: doc.id, ...data });
 
-            produtos.push({ id: doc.id, ...data, expiraEm });
+            // Inicializa 15 minutos em segundos (15 * 60 = 900 segundos) para cada produto
+            temposProdutos[doc.id] = {
+                tempoRestante: 15 * 60,
+                travado: false,
+                tempoTrava: 0
+            };
         });
+
         renderizarProdutos();
         if (auth.currentUser) atualizarListaAdmin();
     } catch (error) {
@@ -397,8 +401,6 @@ async function adicionarProduto() {
         return;
     }
 
-    const expiraEm = Date.now() + (tempoMinutos * 60 * 1000);
-
     const novoProduto = {
         nome,
         imagens,
@@ -406,13 +408,13 @@ async function adicionarProduto() {
         link,
         preco,
         precoAntigo,
-        expiraEm,
+        tempoMinutos,
         criadoEm: firebase.firestore.FieldValue.serverTimestamp()
     };
 
     try {
         await db.collection('produtos').add(novoProduto);
-        mostrarToast('✅ Produto salvo com cronômetro!');
+        mostrarToast('✅ Produto salvo com sucesso!');
 
         document.getElementById('prodNome').value = '';
         document.getElementById('prodImagem1').value = '';
@@ -450,36 +452,55 @@ function calcularDesconto(precoAtual, precoAntigo) {
     return Math.round(((precoAntigo - precoAtual) / precoAntigo) * 100);
 }
 
-// ================= CRONÔMETRO REGRESSIVO ATIVO (CONTAGEM DECRESCENTE) =================
+// ================= CRONÔMETRO INTELIGENTE (TRAVA EM 1 MIN E RENOVA 5 MIN) =================
 function iniciarRelogiosRegressivos() {
     if (countdownInterval) clearInterval(countdownInterval);
 
-    const atualizar = () => {
-        const agora = Date.now();
+    countdownInterval = setInterval(() => {
         produtos.forEach(produto => {
             const timerElement = document.getElementById(`timer-${produto.id}`);
             if (!timerElement) return;
 
-            const expiraEm = produto.expiraEm || (agora + 15 * 60 * 1000);
-            const diff = expiraEm - agora;
-
-            if (diff <= 0) {
-                timerElement.innerHTML = `⚠️ Oferta Expirada!`;
-                if (timerElement.parentElement) timerElement.parentElement.classList.add('expired');
-            } else {
-                const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const segundos = Math.floor((diff % (1000 * 60)) / 1000);
-                
-                const minFormatado = String(minutos).padStart(2, '0');
-                const segFormatado = String(segundos).padStart(2, '0');
-                
-                timerElement.innerHTML = `00:${minFormatado}:${segFormatado}`;
+            if (!temposProdutos[produto.id]) {
+                temposProdutos[produto.id] = { tempoRestante: 15 * 60, travado: false, tempoTrava: 0 };
             }
-        });
-    };
 
-    atualizar();
-    countdownInterval = setInterval(atualizar, 1000);
+            let prodTimer = temposProdutos[produto.id];
+
+            // Se estiver no modo de trava (chegou em 1 minuto e pausou por 15 segundos)
+            if (prodTimer.travado) {
+                prodTimer.tempoTrava--;
+                if (prodTimer.tempoTrava <= 0) {
+                    // Passou os 15 segundos conectado: renova a oferta adicionando mais 5 minutos (300 segundos)
+                    prodTimer.tempoRestante = 5 * 60;
+                    prodTimer.travado = false;
+                }
+            } else {
+                // Contagem decrescente normal
+                if (prodTimer.tempoRestante > 0) {
+                    prodTimer.tempoRestante--;
+                }
+
+                // Quando chegar exatamente em 1 minuto (60 segundos), trava por 15 segundos
+                if (prodTimer.tempoRestante === 60 && !prodTimer.travado) {
+                    prodTimer.travado = true;
+                    prodTimer.tempoTrava = 15; // 15 segundos de verificação
+                }
+            }
+
+            // Formata o tempo para exibir 00:MM:SS
+            let t = prodTimer.tempoRestante;
+            const horas = Math.floor(t / 3600);
+            const minutos = Math.floor((t % 3600) / 60);
+            const segundos = t % 60;
+
+            const hFormatado = String(horas).padStart(2, '0');
+            const mFormatado = String(minutos).padStart(2, '0');
+            const sFormatado = String(segundos).padStart(2, '0');
+
+            timerElement.innerHTML = `${hFormatado}:${mFormatado}:${sFormatado}`;
+        });
+    }, 1000);
 }
 
 // ================= CARROSSEL AUTOMÁTICO =================
@@ -630,7 +651,7 @@ function renderizarProdutos() {
                         ${produto.precoAntigo > 0 ? `<span class="product-old-price">De R$ ${produto.precoAntigo.toFixed(2).replace('.', ',')}</span>` : ''}
                     </div>
                     
-                    <!-- CRONÔMETRO FORMATO 00:15:00 EM FUNDO PRETO -->
+                    <!-- CRONÔMETRO INTELIGENTE EM FUNDO PRETO -->
                     <div class="countdown-box">
                         <span id="timer-${id}">00:15:00</span>
                     </div>
